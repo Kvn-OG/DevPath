@@ -34,11 +34,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!supabase) return;
-    supabase.auth
-      .getSession()
-      .then(({ data }) => setSession(data.session))
-      .catch(() => setSession(null)) // sem sessão: segue com o progresso local
-      .finally(() => setLoading(false));
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setLoading(false);
+    });
     const { data } = supabase.auth.onAuthStateChange((_event, newSession) => setSession(newSession));
     return () => data.subscription.unsubscribe();
   }, [supabase]);
@@ -57,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       user: session?.user ?? null,
       signUp: (email, password, displayName) =>
-        run(() => supabase!.auth.signUp({ email, password, options: { data: { display_name: displayName }, emailRedirectTo: window.location.origin } })),
+        run(() => supabase!.auth.signUp({ email, password, options: { data: { display_name: displayName } } })),
       signIn: (email, password) => run(() => supabase!.auth.signInWithPassword({ email, password })),
       signOut: async () => {
         await supabase?.auth.signOut();

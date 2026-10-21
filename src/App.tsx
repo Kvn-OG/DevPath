@@ -23,7 +23,6 @@ const ReviewSessionPage = lazy(() => import('./pages/ReviewSessionPage'));
 const AssessmentPage = lazy(() => import('./pages/AssessmentPage'));
 const GlossaryPage = lazy(() => import('./pages/GlossaryPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
-const LoginPage = lazy(() => import('./pages/LoginPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 const page = (node: ReactNode) => <Suspense fallback={<p className="text-muted">Carregando…</p>}>{node}</Suspense>;
@@ -49,7 +48,6 @@ export function AppRoutes() {
         <Route path="avaliacoes/:assessmentId" element={page(<AssessmentPage />)} />
         <Route path="glossario" element={page(<GlossaryPage />)} />
         <Route path="configuracoes" element={page(<SettingsPage />)} />
-        <Route path="entrar" element={page(<LoginPage />)} />
         <Route path="*" element={page(<NotFoundPage />)} />
       </Route>
     </Routes>
