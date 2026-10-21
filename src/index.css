@@ -1,0 +1,181 @@
+@import 'tailwindcss';
+
+/* Tokens do DevPath. As utilidades do Tailwind (bg-bg, text-muted, border-line...)
+   apontam para variáveis que mudam com o tema. */
+@theme {
+  --color-bg: var(--dp-bg);
+  --color-surface: var(--dp-surface);
+  --color-surface-2: var(--dp-surface-2);
+  --color-line: var(--dp-line);
+  --color-line-strong: var(--dp-line-strong);
+  --color-fg: var(--dp-fg);
+  --color-muted: var(--dp-muted);
+  --color-faint: var(--dp-faint);
+  --color-accent: var(--dp-accent);
+  --color-accent-fg: var(--dp-accent-fg);
+  --color-accent-strong: var(--dp-accent-strong);
+  --color-accent-soft: var(--dp-accent-soft);
+  --color-success: var(--dp-success);
+  --color-success-soft: var(--dp-success-soft);
+  --color-danger: var(--dp-danger);
+  --color-danger-soft: var(--dp-danger-soft);
+  --color-warning: var(--dp-warning);
+  --color-warning-soft: var(--dp-warning-soft);
+  --color-info: var(--dp-info);
+  --color-info-soft: var(--dp-info-soft);
+
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+:root {
+  color-scheme: dark;
+  --dp-bg: #111114;
+  --dp-surface: #18181d;
+  --dp-surface-2: #202027;
+  --dp-line: #2a2a33;
+  --dp-line-strong: #3a3a46;
+  --dp-fg: #ececf1;
+  --dp-muted: #a3a3b0;
+  --dp-faint: #75757f;
+  --dp-accent: #7c3aed;
+  --dp-accent-fg: #ffffff;
+  --dp-accent-strong: #b69cff;
+  --dp-accent-soft: rgb(139 92 246 / 0.14);
+  --dp-success: #4ade80;
+  --dp-success-soft: rgb(74 222 128 / 0.12);
+  --dp-danger: #f87171;
+  --dp-danger-soft: rgb(248 113 113 / 0.12);
+  --dp-warning: #fbbf24;
+  --dp-warning-soft: rgb(251 191 36 / 0.12);
+  --dp-info: #7dd3fc;
+  --dp-info-soft: rgb(125 211 252 / 0.1);
+
+  /* Destaque de sintaxe (classes tok-* do @lezer/highlight) */
+  --tok-keyword: #c4a7ff;
+  --tok-string: #9be7a8;
+  --tok-number: #ffb57a;
+  --tok-comment: #6f6f7d;
+  --tok-function: #7dd3fc;
+  --tok-property: #f0abfc;
+  --tok-punct: #a3a3b0;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --dp-bg: #f6f6f8;
+  --dp-surface: #ffffff;
+  --dp-surface-2: #f0eff4;
+  --dp-line: #e2e1e8;
+  --dp-line-strong: #cfcdd8;
+  --dp-fg: #18181d;
+  --dp-muted: #52525e;
+  --dp-faint: #75757f;
+  --dp-accent: #6d28d9;
+  --dp-accent-fg: #ffffff;
+  --dp-accent-strong: #6d28d9;
+  --dp-accent-soft: rgb(109 40 217 / 0.09);
+  --dp-success: #15803d;
+  --dp-success-soft: rgb(21 128 61 / 0.09);
+  --dp-danger: #b91c1c;
+  --dp-danger-soft: rgb(185 28 28 / 0.08);
+  --dp-warning: #a16207;
+  --dp-warning-soft: rgb(161 98 7 / 0.1);
+  --dp-info: #0369a1;
+  --dp-info-soft: rgb(3 105 161 / 0.08);
+
+  --tok-keyword: #6d28d9;
+  --tok-string: #15803d;
+  --tok-number: #c2410c;
+  --tok-comment: #8a8a96;
+  --tok-function: #0369a1;
+  --tok-property: #a21caf;
+  --tok-punct: #52525e;
+}
+
+html,
+body {
+  background: var(--dp-bg);
+  color: var(--dp-fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  min-height: 100dvh;
+}
+
+::selection {
+  background: var(--dp-accent-soft);
+}
+
+:focus-visible {
+  outline: 2px solid var(--dp-accent-strong);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Tokens de código */
+.tok-keyword,
+.tok-operatorKeyword,
+.tok-definitionKeyword,
+.tok-controlKeyword,
+.tok-moduleKeyword {
+  color: var(--tok-keyword);
+}
+.tok-string,
+.tok-string2 {
+  color: var(--tok-string);
+}
+.tok-number,
+.tok-bool,
+.tok-atom,
+.tok-null {
+  color: var(--tok-number);
+}
+.tok-comment,
+.tok-lineComment,
+.tok-blockComment {
+  color: var(--tok-comment);
+  font-style: italic;
+}
+.tok-variableName.tok-definition,
+.tok-function {
+  color: var(--tok-function);
+}
+.tok-propertyName {
+  color: var(--tok-property);
+}
+.tok-punctuation,
+.tok-operator,
+.tok-bracket {
+  color: var(--tok-punct);
+}
+
+@keyframes dp-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-fade-in {
+  animation: dp-fade-in 180ms ease-out;
+}
+.tok-variableName2,
+.tok-className,
+.tok-typeName {
+  color: var(--tok-function);
+}

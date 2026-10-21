@@ -1,0 +1,123 @@
+# DevPath
+
+Plataforma interativa para aprender programação full stack do zero: aulas curtas e progressivas, exercícios corrigidos de verdade, dicas progressivas, desafios, projetos guiados, avaliações, revisão espaçada e acompanhamento de progresso. Todo o conteúdo é em português brasileiro.
+
+## Como rodar
+
+Requisitos: Node.js 20+ (testado com Node 24) e npm.
+
+```bash
+npm install        # instala as dependências
+npm run dev        # inicia em http://localhost:5173
+npm test           # roda todos os testes (Vitest)
+npm run typecheck  # checagem de tipos
+npm run build      # build de produção em dist/
+npm run preview    # serve o build localmente
+```
+
+Nenhum serviço externo é necessário: o DevPath funciona 100% local, salvando o progresso no navegador.
+
+## O que está pronto (v0.1)
+
+| Item | Situação |
+| --- | --- |
+| Trilha 1 — Lógica de programação com JavaScript | **Completa**: 3 módulos, 12 aulas |
+| Exercícios das aulas | 24 (guiado + independente por aula), 3 níveis de dificuldade, 10 formatos |
+| Avaliações | Diagnóstica (6), 3 de módulo (4 cada) e final (8): 26 questões exclusivas |
+| Desafios | 5 completos (calculadora, conversor, validador, tarefas, contatos) + 7 planejados |
+| Projeto guiado | Projeto A — Calculadora de comissões e metas (5 etapas incrementais) |
+| Trilhas 2 a 10, projetos B–F e projeto final | **Planejados**: estrutura, objetivos, pré-requisitos e tópicos. Marcados como “Em planejamento” na interface |
+| Glossário | 40 termos + comparações (JavaScript × Java, React × Node.js, banco × back-end, Supabase × API própria) |
+
+### Formatos de exercício
+Múltipla escolha · verdadeiro/falso com justificativa · preencher lacunas · ordenar etapas · prever a saída · e exercícios de código: escrever função, corrigir bug, completar código, resolver algoritmo e refatorar.
+
+### Como a correção funciona
+- **Código**: executado em um **Web Worker isolado** (sem DOM, sem rede, sem acesso ao armazenamento da aplicação, modo estrito, limite de 2,5 s contra laços infinitos) e corrigido por **testes automatizados**, incluindo testes ocultos de casos-limite. Algumas tarefas têm restrições verificáveis (ex.: “use filter e map, sem for”). Erros do JavaScript são exibidos com a mensagem original e uma explicação em português.
+- **Prever a saída**: compara linha a linha, ignorando espaços extras e tipo de aspas. As saídas esperadas são conferidas pelos testes executando o código de verdade.
+- **Lacunas**: aceita variações equivalentes (ex.: `.nome`, `["nome"]`, `['nome']`).
+- **Verdadeiro/falso**: exige o valor **e** a justificativa, e diz qual das duas partes está errada.
+- Dicas em 4 níveis: conceito → raciocínio → estrutura parcial → solução comentada. A solução só é liberada depois de uma tentativa e das três dicas.
+
+### Progresso e aprendizagem
+- Aula **concluída** = os dois exercícios resolvidos (abrir a página não conta). **Dominada** = concluída sem consultar a solução do exercício independente e com domínio ≥ 80% nos conceitos.
+- Domínio por conceito calculado a partir de acertos, tentativas erradas, dicas e soluções vistas em todos os exercícios do conceito.
+- **Revisão espaçada** (caixas de Leitner: 1, 2, 4, 7, 15, 30 dias). Conceitos entram ao concluir a aula, ao errar o mesmo exercício duas vezes ou ao errar questões de avaliação.
+- **Recomendações explicáveis**, ex.: “Recomendamos revisar condicionais porque você teve dificuldade em 3 exercícios desse assunto (4 tentativas sem sucesso).”
+- Gamificação moderada: XP (reduzido quando há dicas/solução), níveis, 12 conquistas, metas semanais configuráveis, sequência de dias **sem punição** e marcos por trilha.
+- Pré-requisitos entre aulas, com opção “Abrir mesmo assim” para consulta.
+
+### Modos de dados
+- **Local (padrão)**: progresso real, salvo no `localStorage`.
+- **Demonstração**: progresso **fictício**, gerado pelas mesmas regras do sistema, salvo separadamente e sinalizado com um aviso em todas as páginas. Não altera o progresso real.
+- **Supabase (opcional)**: sincroniza com sua conta.
+
+Exportar/importar progresso em JSON fica em Configurações.
+
+## Arquitetura
+
+SPA em **React 19 + Vite + TypeScript + Tailwind CSS 4**, com React Router, CodeMirror 6 (editor) e Lucide (ícones).
+
+```
+src/
+  content/       Conteúdo educacional tipado (aulas, exercícios, avaliações, desafios, projetos, trilhas, glossário)
+  types/         Tipos de conteúdo e de progresso
+  domain/        Regras puras: correção, domínio, revisão espaçada, XP, estatísticas, recomendações, reducer de progresso
+  sandbox/       Execução isolada de código (avaliador, Web Worker, formatação, tradução de erros)
+  persistence/   Repositórios (localStorage, demonstração, Supabase) e mapeamento para tabelas
+  state/         Providers React (autenticação opcional e progresso com salvamento automático)
+  components/    UI: layout, primitivos, código, exercícios, aula
+  pages/         Uma página por rota
+supabase/migrations/  SQL das tabelas, constraints, índices e políticas RLS
+```
+
+Decisões principais:
+- **Conteúdo separado da interface**: novas aulas são arquivos em `src/content/...` registrados em `src/content/index.ts`. Nenhum componente precisa mudar.
+- **Toda mudança de progresso passa por um reducer puro** (`domain/progressReducer.ts`). A persistência só salva o estado resultante, através da interface `ProgressRepository`. Trocar localStorage por Supabase não toca na UI.
+- **Estatísticas são derivadas** dos registros (tentativas, aulas, avaliações). Nada é armazenado “pronto” e nenhum número é inventado: sem tentativas, a taxa de acertos aparece como “—”.
+- **Testes de conteúdo** garantem que toda solução oficial passa nos próprios testes, que nenhum código inicial passa sozinho e que toda saída esperada confere com a execução real.
+
+## Configuração opcional do Supabase
+
+1. Crie um projeto em [supabase.com](https://supabase.com).
+2. No **SQL Editor**, execute `supabase/migrations/001_progress.sql` (tabelas de progresso, constraints, índices, gatilho de perfil e RLS). O arquivo `002_content_catalog.sql` é opcional: ele documenta o modelo relacional do catálogo de conteúdo para uma futura gestão via CMS; o app não depende dele.
+3. Copie `.env.example` para `.env.local` e preencha com os valores de *Project Settings → API*:
+   ```
+   VITE_SUPABASE_URL=https://xxxx.supabase.co
+   VITE_SUPABASE_ANON_KEY=sua-chave-anon-publica
+   ```
+   Use **somente** a chave pública `anon`. A `service_role` nunca deve ir para o front-end ou para o repositório. `.env.local` já está no `.gitignore`.
+4. Em *Authentication → URL Configuration*, adicione `http://localhost:5173/configuracoes` às Redirect URLs (para a recuperação de senha).
+5. Reinicie `npm run dev`. Em **Configurações**, crie uma conta ou entre e escolha “Sincronizar com Supabase”. Você pode importar o progresso local para a conta.
+
+Segurança: RLS está habilitado em todas as tabelas e cada política restringe o acesso a `auth.uid() = user_id`. Tentativas e resultados de avaliação não têm política de UPDATE (histórico imutável). Falhas de conexão não perdem dados: o progresso fica em cache local e é reenviado automaticamente.
+
+## Testes
+
+`npm test` roda 153 testes em 6 arquivos:
+- integridade do conteúdo (soluções, códigos iniciais, saídas esperadas, referências e quantidades mínimas);
+- avaliador do sandbox (testes, erros, isolamento, restrições);
+- correção dos formatos não-código;
+- regras de progresso, revisão, recomendações, XP e estatísticas;
+- persistência local, dados de demonstração e mapeamento Supabase;
+- fluxo de ponta a ponta na interface: abrir a aula 1, errar, receber feedback, acertar, concluir a aula, salvar e restaurar o progresso, além das dicas, dos pré-requisitos e da navegação por todas as páginas.
+
+## Limitações conhecidas
+
+- **Web Workers no jsdom**: o jsdom (ambiente dos testes de interface) não tem Web Workers, então a execução de código na UI não é coberta por esses testes. A lógica do avaliador é testada diretamente, e o worker compilado foi validado em Node com um `self` simulado. Se o navegador não oferecer Workers, o DevPath informa a limitação em vez de simular resultados.
+- **Isolamento do sandbox**: ele é adequado para código do próprio estudante rodando no próprio navegador, mas não é um sandbox para código de terceiros. Por exemplo, `(() => {}).constructor` ainda alcança o escopo do worker, que já está sem rede.
+- Mensagens de erro não indicam a linha exata do código do estudante.
+- As perguntas de revisão das aulas são de autoverificação (resposta revelada) e não contam para o domínio.
+- As reflexões dos projetos são registradas, mas não avaliadas automaticamente.
+- SQL, Java e React ainda não têm ambiente de execução: entram com as trilhas correspondentes (sugestão: PGlite/sql.js para SQL no navegador e um executor remoto isolado para Java).
+- Conquistas são derivadas do progresso e não guardam a data de desbloqueio.
+- O cliente Supabase entra no bundle inicial (~60 kB gzip) mesmo sem configuração.
+
+## Próximas melhorias recomendadas
+
+1. Produzir a Trilha 2 (Fundamentos da Web) e o Projeto B, com exercícios de HTML/CSS/DOM validados em um iframe isolado.
+2. Exercícios SQL com PGlite no navegador (Trilha 5).
+3. Indicar a linha do erro no editor (mapeando o stack trace do worker).
+4. Carregar o Supabase sob demanda (import dinâmico) quando configurado.
+5. Testes E2E em navegador real (Playwright) cobrindo os exercícios de código.
+6. Registrar a data de desbloqueio das conquistas e mostrar uma notificação discreta.
