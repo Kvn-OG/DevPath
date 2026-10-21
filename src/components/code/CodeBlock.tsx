@@ -1,11 +1,13 @@
 import { Check, Copy } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import type { CodeLanguage } from '../../types/content';
 import { cn } from '../../utils/cn';
 import { highlightLines } from './highlight';
 
 interface CodeBlockProps {
   code: string;
   caption?: string;
+  language?: CodeLanguage;
   /** Linhas destacadas (começando em 1). */
   highlight?: number[];
   lineNumbers?: boolean;
@@ -14,8 +16,11 @@ interface CodeBlockProps {
 }
 
 /** Bloco de código somente leitura, com destaque de sintaxe e botão de copiar. */
-export function CodeBlock({ code, caption, highlight = [], lineNumbers = true, plain = false, className }: CodeBlockProps) {
-  const lines = useMemo(() => (plain ? code.split('\n').map((text) => [{ text, className: '' }]) : highlightLines(code)), [code, plain]);
+export function CodeBlock({ code, caption, language = 'javascript', highlight = [], lineNumbers = true, plain = false, className }: CodeBlockProps) {
+  const lines = useMemo(
+    () => (plain ? code.split('\n').map((text) => [{ text, className: '' }]) : highlightLines(code, language)),
+    [code, plain, language],
+  );
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {

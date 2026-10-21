@@ -40,7 +40,7 @@ export function isAnswerComplete(answer: Answer): boolean {
 }
 
 export function gradeAnswer(exercise: Exercise, answer: Answer): GradeResult {
-  if (exercise.type === 'code') {
+  if (exercise.type === 'code' || exercise.type === 'sql') {
     throw new Error('Exercícios de código são corrigidos por testes no sandbox.');
   }
   if (exercise.type !== answer.type) {

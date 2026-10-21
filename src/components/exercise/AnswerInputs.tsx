@@ -32,7 +32,7 @@ export function MultipleChoiceInput({ exercise, answer, onChange, disabled }: In
   const name = `mc-${exercise.id}`;
   return (
     <div className="space-y-3">
-      {exercise.code && <CodeBlock code={exercise.code} />}
+      {exercise.code && <CodeBlock code={exercise.code} language={exercise.language} />}
       <fieldset className="space-y-2">
         <legend className="sr-only">Alternativas</legend>
         {exercise.options.map((option) => (
@@ -60,7 +60,7 @@ export function TrueFalseInput({ exercise, answer, onChange, disabled }: InputPr
         <span className="text-muted">Afirmação: </span>
         {renderInline(exercise.claim)}
       </p>
-      {exercise.code && <CodeBlock code={exercise.code} />}
+      {exercise.code && <CodeBlock code={exercise.code} language={exercise.language} />}
       <fieldset className="flex gap-2">
         <legend className="mb-2 text-sm font-medium">A afirmação é:</legend>
         {[true, false].map((value) => (
@@ -173,7 +173,7 @@ export function PredictOutputInput({ exercise, answer, onChange, disabled }: Inp
   const id = `predict-${exercise.id}`;
   return (
     <div className="space-y-3">
-      <CodeBlock code={exercise.code} />
+      <CodeBlock code={exercise.code} language={exercise.language} />
       <div>
         <label htmlFor={id} className="mb-1.5 block text-sm font-medium">
           Sua previsão da saída

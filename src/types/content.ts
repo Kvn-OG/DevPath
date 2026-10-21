@@ -6,11 +6,17 @@ export type Difficulty = 'iniciante' | 'basico' | 'intermediario' | 'avancado';
 /** Estado editorial: só "completo" pode ser estudado. */
 export type ContentStatus = 'completo' | 'em-producao' | 'planejado';
 
+/**
+ * Linguagem de um trecho de código. JavaScript e SQL rodam no navegador;
+ * Go e shell são apenas exibidos (com destaque de sintaxe quando disponível).
+ */
+export type CodeLanguage = 'javascript' | 'sql' | 'go' | 'shell';
+
 export type Block =
   | { type: 'p'; text: string }
   | { type: 'h'; text: string }
   | { type: 'list'; items: string[]; ordered?: boolean }
-  | { type: 'code'; code: string; caption?: string }
+  | { type: 'code'; code: string; caption?: string; language?: CodeLanguage }
   | { type: 'callout'; tone: 'info' | 'tip' | 'warning'; title?: string; text: string };
 
 export interface Concept {
@@ -51,6 +57,10 @@ export interface Lesson {
   analogy?: string;
   example: {
     code: string;
+    /** Padrão: javascript. Também vale para os trechos de "Erros comuns". */
+    language?: CodeLanguage;
+    /** SQL: tabelas e dados criados antes do exemplo (exibidos à parte). */
+    setup?: string;
     lineByLine?: LineExplanation[];
     output: string;
   };
@@ -71,10 +81,14 @@ export type ExerciseType =
   | 'fill-blanks'
   | 'order-steps'
   | 'predict-output'
-  | 'code';
+  | 'code'
+  | 'sql';
 
 /** Subtipo pedagógico dos exercícios de código. */
 export type CodeTaskKind = 'write-function' | 'fix-bug' | 'complete-code' | 'algorithm' | 'refactor';
+
+/** Subtipo pedagógico dos exercícios de SQL. */
+export type SqlTaskKind = 'write-query' | 'fix-query' | 'modify-data' | 'create-schema';
 
 export interface ExerciseBase {
   id: string;
@@ -84,6 +98,8 @@ export interface ExerciseBase {
   statement: string;
   context?: string;
   requirements?: string[];
+  /** Linguagem do código exibido no exercício e na solução. Padrão: javascript. */
+  language?: CodeLanguage;
   /** Dica 1: conceito; Dica 2: raciocínio; Dica 3: estrutura parcial. */
   hints: [string, string, string];
   solution: { code?: string; explanation: string };
@@ -146,13 +162,43 @@ export interface CodeExercise extends ExerciseBase {
   constraints?: CodeConstraint[];
 }
 
+/** Valor de uma célula no resultado esperado. Números e booleanos são comparados pelo texto. */
+export type SqlCell = string | number | boolean | null;
+
+export interface SqlTest {
+  name: string;
+  /** SQL extra executado depois do setup do exercício (ex.: outros dados para um teste oculto). */
+  setup?: string;
+  /**
+   * Consulta executada depois do código do estudante, para conferir o estado do banco
+   * (INSERT, UPDATE, CREATE TABLE...). Sem ela, o teste confere o resultado da última
+   * instrução do estudante que devolve linhas.
+   */
+  query?: string;
+  expected: { columns?: string[]; rows: SqlCell[][] };
+  /** Exige as linhas nesta ordem (quando o enunciado pede ORDER BY). */
+  ordered?: boolean;
+  hidden?: boolean;
+}
+
+export interface SqlExercise extends ExerciseBase {
+  type: 'sql';
+  task: SqlTaskKind;
+  /** Tabelas e dados criados antes do código do estudante (exibidos no enunciado). */
+  setup: string;
+  starterCode: string;
+  tests: SqlTest[];
+  constraints?: CodeConstraint[];
+}
+
 export type Exercise =
   | MultipleChoiceExercise
   | TrueFalseExercise
   | FillBlanksExercise
   | OrderStepsExercise
   | PredictOutputExercise
-  | CodeExercise;
+  | CodeExercise
+  | SqlExercise;
 
 // ---------------------------------------------------------------------------
 // Estrutura de trilhas

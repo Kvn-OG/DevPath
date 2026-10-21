@@ -1,0 +1,7 @@
+<!doctype html><html><body><pre id="out">carregando</pre>
+<script type="module">
+import { runSql } from '/src/sandbox/runSql.ts';
+const t = performance.now();
+const r = await runSql("CREATE TABLE p (id int, nome text); INSERT INTO p VALUES (1, 'Café');", "SELECT * FROM p;", [{ name: 't', expected: { rows: [[1, 'Café']] } }]);
+document.getElementById('out').textContent = 'RESULT ' + Math.round(performance.now() - t) + 'ms ' + JSON.stringify(r);
+</script></body></html>

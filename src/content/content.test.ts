@@ -76,7 +76,8 @@ describe('integridade de referências', () => {
 });
 
 describe('exemplos das aulas', () => {
-  it.each(lessons.map((l) => [l.id, l] as const))('%s: a saída do exemplo é a saída real', (_id, lesson) => {
+  const jsLessons = lessons.filter((l) => (l.example.language ?? 'javascript') === 'javascript');
+  it.each(jsLessons.map((l) => [l.id, l] as const))('%s: a saída do exemplo é a saída real', (_id, lesson) => {
     const result = evaluate(lesson.example.code, [{ name: 'saida', expectOutput: lesson.example.output }]);
     expect(result.error).toBeUndefined();
     expect(normalizeOutput(result.logs.join('\n'))).toBe(normalizeOutput(lesson.example.output));

@@ -38,7 +38,7 @@ export function Blocks({ blocks }: { blocks: Block[] }) {
             );
           }
           case 'code':
-            return <CodeBlock key={i} code={block.code} caption={block.caption} />;
+            return <CodeBlock key={i} code={block.code} caption={block.caption} language={block.language} />;
           case 'callout': {
             const style = CALLOUT[block.tone];
             const Icon = style.icon;

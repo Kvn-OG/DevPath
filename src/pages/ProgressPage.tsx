@@ -18,8 +18,11 @@ export default function ProgressPage() {
   const maxActivity = Math.max(1, ...activity.map((d) => d.activities));
   const week = weeklyProgress(state, now);
   const history = recentHistory(state, 20);
-  const logica = tracks[0];
-  const lp = trackProgress(state, logica);
+  const ready = tracks.filter((t) => t.status === 'completo').map((t) => trackProgress(state, t));
+  const lp = {
+    completedLessons: ready.reduce((sum, p) => sum + p.completedLessons, 0),
+    totalLessons: ready.reduce((sum, p) => sum + p.totalLessons, 0),
+  };
 
   return (
     <div className="space-y-10">

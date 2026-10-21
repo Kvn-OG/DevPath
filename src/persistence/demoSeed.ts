@@ -22,7 +22,7 @@ export function buildDemoState(now = new Date()): ProgressState {
 
   const attempt = (exerciseId: string, correct: boolean, when: string, source: AttemptSource = 'aula') => {
     const exercise = getExercise(exerciseId);
-    const code = exercise?.type === 'code' ? (correct ? exercise.solution.code : exercise.starterCode) : undefined;
+    const code = exercise?.type === 'code' || exercise?.type === 'sql' ? (correct ? exercise.solution.code : exercise.starterCode) : undefined;
     dispatch({ type: 'ATTEMPT_RECORDED', attempt: { id: newId(), exerciseId, at: when, correct, source }, code });
   };
 

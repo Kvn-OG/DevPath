@@ -1,9 +1,11 @@
 import { javascript } from '@codemirror/lang-javascript';
+import { PostgreSQL, sql } from '@codemirror/lang-sql';
 import { indentUnit, syntaxHighlighting } from '@codemirror/language';
 import { EditorView } from '@codemirror/view';
 import { classHighlighter } from '@lezer/highlight';
 import CodeMirror from '@uiw/react-codemirror';
 import { useMemo } from 'react';
+import type { CodeLanguage } from '../../types/content';
 
 const devpathTheme = EditorView.theme({
   '&': {
@@ -28,11 +30,22 @@ interface CodeEditorProps {
   onChange(value: string): void;
   label: string;
   minHeight?: string;
+  /** Linguagens editáveis: as que o DevPath executa. */
+  language?: Extract<CodeLanguage, 'javascript' | 'sql'>;
 }
 
 /** Editor de código real (CodeMirror 6): destaque, numeração, indentação e atalhos. */
-export function CodeEditor({ value, onChange, label, minHeight = '220px' }: CodeEditorProps) {
-  const extensions = useMemo(() => [javascript(), syntaxHighlighting(classHighlighter), indentUnit.of('  '), EditorView.lineWrapping, devpathTheme], []);
+export function CodeEditor({ value, onChange, label, minHeight = '220px', language = 'javascript' }: CodeEditorProps) {
+  const extensions = useMemo(
+    () => [
+      language === 'sql' ? sql({ dialect: PostgreSQL }) : javascript(),
+      syntaxHighlighting(classHighlighter),
+      indentUnit.of('  '),
+      EditorView.lineWrapping,
+      devpathTheme,
+    ],
+    [language],
+  );
   return (
     <div className="overflow-hidden rounded-lg border border-line focus-within:border-accent-strong/60">
       <CodeMirror

@@ -2,7 +2,14 @@ import { AlertTriangle, CheckCircle2, EyeOff, XCircle } from 'lucide-react';
 import type { RunResult } from '../../sandbox/evaluator';
 import { cn } from '../../utils/cn';
 
-export function RunResultView({ result, mode }: { result: RunResult; mode: 'executar' | 'verificar' }) {
+interface RunResultViewProps {
+  result: RunResult;
+  mode: 'executar' | 'verificar';
+  language?: 'javascript' | 'sql';
+}
+
+export function RunResultView({ result, mode, language = 'javascript' }: RunResultViewProps) {
+  const sql = language === 'sql';
   const visibleTests = result.tests;
   const passedCount = result.tests.filter((t) => t.passed).length;
 
@@ -63,19 +70,23 @@ export function RunResultView({ result, mode }: { result: RunResult; mode: 'exec
               </div>
               {!test.passed && !test.hidden && (test.received !== undefined || test.error) && (
                 <div className="mt-1.5 ml-6 space-y-0.5 font-mono text-xs text-muted">
-                  {test.expected !== undefined && <div>esperado: <span className="text-success">{test.expected}</span></div>}
+                  {test.expected !== undefined && <div className="whitespace-pre-wrap">esperado:{sql ? '\n' : ' '}<span className="text-success">{test.expected}</span></div>}
                   {test.error ? (
                     <div className="text-danger">
                       {test.error.name}: {test.error.message}
                       <div className="mt-1 font-sans text-muted">{test.error.explanation}</div>
                     </div>
                   ) : (
-                    <div className="whitespace-pre-wrap">recebido: <span className="text-danger">{test.received}</span></div>
+                    <div className="whitespace-pre-wrap">recebido:{sql ? '\n' : ' '}<span className="text-danger">{test.received}</span></div>
                   )}
                 </div>
               )}
               {!test.passed && test.hidden && (
-                <p className="mt-1 ml-6 text-xs text-faint">Testes ocultos verificam casos-limite. Pense em listas vazias, zero, negativos e valores repetidos.</p>
+                <p className="mt-1 ml-6 text-xs text-faint">
+                  {sql
+                    ? 'Testes ocultos rodam a sua consulta com outros dados. Evite fixar IDs ou valores que só valem para os dados de exemplo e pense em NULL, empates e tabelas vazias.'
+                    : 'Testes ocultos verificam casos-limite. Pense em listas vazias, zero, negativos e valores repetidos.'}
+                </p>
               )}
             </li>
           ))}
@@ -83,9 +94,14 @@ export function RunResultView({ result, mode }: { result: RunResult; mode: 'exec
       )}
 
       <div>
-        <div className="mb-1 text-xs font-medium tracking-wide text-muted uppercase">Saída do console</div>
-        <pre className="max-h-56 overflow-auto rounded-lg border border-line bg-bg px-4 py-3 font-mono text-[13px] whitespace-pre-wrap text-fg">
-          {result.logs.length ? result.logs.join('\n') : <span className="text-faint">(nenhuma saída)</span>}
+        <div className="mb-1 text-xs font-medium tracking-wide text-muted uppercase">{sql ? 'Resultado' : 'Saída do console'}</div>
+        <pre
+          className={cn(
+            'max-h-72 overflow-auto rounded-lg border border-line bg-bg px-4 py-3 font-mono text-[13px] text-fg',
+            sql ? 'whitespace-pre' : 'whitespace-pre-wrap',
+          )}
+        >
+          {result.logs.length ? result.logs.join(sql ? '\n\n' : '\n') : <span className="text-faint">(nenhuma saída)</span>}
         </pre>
       </div>
     </div>

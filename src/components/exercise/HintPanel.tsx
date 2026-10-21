@@ -73,7 +73,7 @@ export function SolutionView({ exercise }: { exercise: Exercise }) {
       <div className="flex items-center gap-2 text-xs font-semibold tracking-wide text-accent-strong uppercase">
         <ScrollText size={14} aria-hidden /> Uma solução possível
       </div>
-      {exercise.solution.code && <CodeBlock code={exercise.solution.code} />}
+      {exercise.solution.code && <CodeBlock code={exercise.solution.code} language={exercise.type === 'sql' ? 'sql' : exercise.language} />}
       <p className="text-sm text-fg">{renderInline(exercise.solution.explanation)}</p>
     </div>
   );

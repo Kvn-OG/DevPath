@@ -26,7 +26,7 @@ Nenhum serviço externo é necessário: o DevPath funciona 100% local, salvando 
 | Avaliações | Diagnóstica (6), 3 de módulo (4 cada) e final (8): 26 questões exclusivas |
 | Desafios | 5 completos (calculadora, conversor, validador, tarefas, contatos) + 7 planejados |
 | Projeto guiado | Projeto A — Calculadora de comissões e metas (5 etapas incrementais) |
-| Trilhas 2 a 10, projetos B–F e projeto final | **Planejados**: estrutura, objetivos, pré-requisitos e tópicos. Marcados como “Em planejamento” na interface |
+| Trilhas 2 a 12, projetos B–F e projeto final | **Planejados**: estrutura, objetivos, pré-requisitos e tópicos. Marcados como “Em planejamento” na interface |
 | Glossário | 40 termos + comparações (JavaScript × Java, React × Node.js, banco × back-end, Supabase × API própria) |
 
 ### Formatos de exercício

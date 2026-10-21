@@ -27,6 +27,7 @@ function emptyAnswer(exercise: Exercise): Answer | null {
     case 'predict-output':
       return { type: 'predict-output', text: '' };
     case 'code':
+    case 'sql':
       return null;
   }
 }
@@ -58,7 +59,8 @@ export function ExerciseRunner({ exercise, source, assessment = false, starterCo
   const solutionUnlocked = solved || (attempts >= 1 && revealed >= 3);
   const lockReason = attempts === 0 ? 'A solução é liberada depois de uma tentativa e das três dicas.' : 'Veja as três dicas antes da solução.';
   const lockedAfterSubmit = assessment && submitted;
-  const starter = starterCode ?? (exercise.type === 'code' ? exercise.starterCode : '');
+  const isCode = exercise.type === 'code' || exercise.type === 'sql';
+  const starter = starterCode ?? (isCode ? exercise.starterCode : '');
 
   const reveal = (level: number) => {
     setRevealed(level);
@@ -131,7 +133,7 @@ export function ExerciseRunner({ exercise, source, assessment = false, starterCo
         )}
       </div>
 
-      {exercise.type === 'code' ? (
+      {exercise.type === 'code' || exercise.type === 'sql' ? (
         <CodeExercisePanel
           key={exercise.id}
           exercise={exercise}
@@ -177,9 +179,9 @@ export function ExerciseRunner({ exercise, source, assessment = false, starterCo
       )}
 
       {grade && <FeedbackBox correct={grade.correct} message={assessment ? undefined : grade.feedback} details={assessment ? undefined : grade.details} />}
-      {assessment && exercise.type === 'code' && codePassed !== null && <FeedbackBox correct={codePassed} />}
+      {assessment && isCode && codePassed !== null && <FeedbackBox correct={codePassed} />}
 
-      {!assessment && (grade?.correct || (exercise.type === 'code' && codePassed)) && !solutionVisible && (
+      {!assessment && (grade?.correct || (isCode && codePassed)) && !solutionVisible && (
         <details className="rounded-lg border border-line bg-surface px-4 py-3 text-sm">
           <summary className="cursor-pointer font-medium text-accent-strong">Compare com a explicação comentada</summary>
           <div className="mt-3">

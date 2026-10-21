@@ -107,7 +107,7 @@ export function DashboardPage() {
             Progresso por trilha
           </SectionTitle>
           <Card className="space-y-4">
-            {tracks.slice(0, 5).map((track) => {
+            {[...tracks.filter((t) => t.status === 'completo'), ...tracks.filter((t) => t.status !== 'completo')].slice(0, 6).map((track) => {
               const p = trackProgress(state, track);
               return (
                 <div key={track.id}>

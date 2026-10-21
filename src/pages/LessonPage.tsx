@@ -233,6 +233,8 @@ function Section({ id, title, subtitle, children }: { id: string; title: string;
 
 function LessonContent({ lesson }: { lesson: Lesson }) {
   const [activeLine, setActiveLine] = useState<number | null>(null);
+  const language = lesson.example.language ?? 'javascript';
+  const runnable = language === 'javascript' || language === 'sql';
   return (
     <>
       <Section id="objetivos" title="Objetivos de aprendizagem">
@@ -267,7 +269,14 @@ function LessonContent({ lesson }: { lesson: Lesson }) {
       </Section>
 
       <Section id="exemplo" title="Exemplo de código">
-        <CodeBlock code={lesson.example.code} highlight={activeLine ? [activeLine] : []} />
+        {lesson.example.setup && (
+          <details className="rounded-lg border border-line bg-surface px-4 py-3 text-sm">
+            <summary className="cursor-pointer font-medium">Tabelas e dados usados no exemplo</summary>
+            <p className="mt-2 mb-3 text-muted">Este SQL cria o banco antes do exemplo rodar.</p>
+            <CodeBlock code={lesson.example.setup} language="sql" />
+          </details>
+        )}
+        <CodeBlock code={lesson.example.code} language={language} highlight={activeLine ? [activeLine] : []} />
         {lesson.example.lineByLine && (
           <div>
             <h3 className="mb-2 text-sm font-semibold">Linha por linha</h3>
@@ -292,9 +301,24 @@ function LessonContent({ lesson }: { lesson: Lesson }) {
         )}
         <div>
           <h3 className="mb-2 text-sm font-semibold">Resultado esperado</h3>
-          <pre className="rounded-lg border border-line bg-bg px-4 py-3 font-mono text-[13px] whitespace-pre-wrap">{lesson.example.output}</pre>
+          <pre
+            className={cn(
+              'overflow-x-auto rounded-lg border border-line bg-bg px-4 py-3 font-mono text-[13px]',
+              language === 'javascript' ? 'whitespace-pre-wrap' : 'whitespace-pre',
+            )}
+          >
+            {lesson.example.output}
+          </pre>
         </div>
-        <Playground key={lesson.id} initialCode={lesson.example.code} />
+        {runnable ? (
+          <Playground key={lesson.id} initialCode={lesson.example.code} language={language} setup={lesson.example.setup} />
+        ) : (
+          <p className="text-xs text-faint">
+            {language === 'go'
+              ? 'Este código roda no seu computador (com o Go instalado) ou no Go Playground (go.dev/play). O DevPath ainda não executa Go no navegador.'
+              : 'Estes comandos rodam em um terminal Linux (na sua VPS ou no WSL). O DevPath não executa comandos de sistema no navegador.'}
+          </p>
+        )}
       </Section>
 
       <Section id="erros" title="Erros comuns">
@@ -302,7 +326,7 @@ function LessonContent({ lesson }: { lesson: Lesson }) {
           {lesson.commonErrors.map((e) => (
             <Card key={e.title} className="space-y-2 p-4 text-sm">
               <div className="font-semibold">{e.title}</div>
-              {e.wrong && <CodeBlock code={e.wrong} lineNumbers={false} />}
+              {e.wrong && <CodeBlock code={e.wrong} language={language} lineNumbers={false} />}
               <p className="text-muted">
                 <span className="font-medium text-fg">Por quê: </span>
                 {renderInline(e.why)}

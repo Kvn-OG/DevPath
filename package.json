@@ -15,10 +15,13 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@codemirror/lang-go": "^6.0.1",
     "@codemirror/lang-javascript": "^6.2.5",
+    "@codemirror/lang-sql": "^6.10.0",
     "@codemirror/language": "^6.13.1",
     "@codemirror/state": "^6.7.6",
     "@codemirror/view": "^6.43.15",
+    "@electric-sql/pglite": "0.5.8",
     "@lezer/highlight": "^1.2.5",
     "@supabase/supabase-js": "^2.118.0",
     "@uiw/react-codemirror": "^4.25.12",

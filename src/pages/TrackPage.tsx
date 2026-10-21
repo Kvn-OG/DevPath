@@ -33,8 +33,9 @@ export default function TrackPage() {
         <Card className="space-y-3">
           <div className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
             <span>
-              {p.completedLessons} de {p.totalLessons} aulas · {p.modulesPassed} de {p.totalModules} avaliações de módulo · avaliação final{' '}
-              {p.finalPassed ? 'aprovada' : 'pendente'}
+              {p.completedLessons} de {p.totalLessons} aulas
+              {p.totalModules > 0 && ` · ${p.modulesPassed} de ${p.totalModules} avaliações de módulo`}
+              {track.finalAssessmentId && ` · avaliação final ${p.finalPassed ? 'aprovada' : 'pendente'}`}
             </span>
             <span className="font-semibold tabular-nums">{Math.round(p.percent * 100)}%</span>
           </div>

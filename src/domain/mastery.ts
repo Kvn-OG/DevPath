@@ -127,7 +127,7 @@ export interface TrackProgress {
   finalPassed: boolean;
   projectsCompleted: number;
   totalProjects: number;
-  /** 0–1, combinando aulas (70%), avaliações (20%) e projeto (10%). */
+  /** 0–1, combinando aulas (70%), avaliações (20%) e projeto (10%), quando existem. */
   percent: number;
   completed: boolean;
 }
@@ -144,7 +144,15 @@ export function trackProgress(state: ProgressState, track: Track): TrackProgress
   const assessmentCount = moduleAssessments.length + (track.finalAssessmentId ? 1 : 0);
   const assessmentPart = assessmentCount ? (modulesPassed + (finalPassed ? 1 : 0)) / assessmentCount : 0;
   const projectPart = track.projectIds.length ? projectsCompleted / track.projectIds.length : 0;
-  const percent = lessons.length === 0 ? 0 : lessonPart * 0.7 + assessmentPart * 0.2 + projectPart * 0.1;
+  // Pesos de aulas (70%), avaliações (20%) e projeto (10%), redistribuídos
+  // quando a trilha não tem avaliações ou projeto.
+  const parts = [
+    { weight: 0.7, value: lessonPart, present: true },
+    { weight: 0.2, value: assessmentPart, present: assessmentCount > 0 },
+    { weight: 0.1, value: projectPart, present: track.projectIds.length > 0 },
+  ].filter((p) => p.present);
+  const totalWeight = parts.reduce((sum, p) => sum + p.weight, 0);
+  const percent = lessons.length === 0 ? 0 : parts.reduce((sum, p) => sum + p.weight * p.value, 0) / totalWeight;
 
   return {
     totalLessons: lessons.length,

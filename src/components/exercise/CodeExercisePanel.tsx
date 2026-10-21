@@ -1,14 +1,16 @@
-import { Play, RotateCcw, ShieldCheck } from 'lucide-react';
+import { Database, Play, RotateCcw, ShieldCheck } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { runCode } from '../../sandbox/runCode';
+import { preloadSql, runSql } from '../../sandbox/runSql';
 import type { RunResult } from '../../sandbox/evaluator';
-import type { CodeExercise } from '../../types/content';
+import type { CodeExercise, SqlExercise } from '../../types/content';
+import { CodeBlock } from '../code/CodeBlock';
 import { CodeEditor } from '../code/CodeEditor';
 import { Button } from '../ui/Button';
 import { RunResultView } from './RunResultView';
 
 interface CodeExercisePanelProps {
-  exercise: CodeExercise;
+  exercise: CodeExercise | SqlExercise;
   initialCode: string;
   starterCode: string;
   locked: boolean;
@@ -18,6 +20,7 @@ interface CodeExercisePanelProps {
 }
 
 export function CodeExercisePanel({ exercise, initialCode, starterCode, locked, onCodeChange, onVerified }: CodeExercisePanelProps) {
+  const isSql = exercise.type === 'sql';
   const [code, setCode] = useState(initialCode);
   const [running, setRunning] = useState<'executar' | 'verificar' | null>(null);
   const [result, setResult] = useState<{ mode: 'executar' | 'verificar'; data: RunResult } | null>(null);
@@ -25,6 +28,9 @@ export function CodeExercisePanel({ exercise, initialCode, starterCode, locked, 
   const saveTimer = useRef<number>(undefined);
 
   useEffect(() => () => window.clearTimeout(saveTimer.current), []);
+  useEffect(() => {
+    if (isSql) preloadSql();
+  }, [isSql]);
 
   const change = (value: string) => {
     setCode(value);
@@ -32,9 +38,16 @@ export function CodeExercisePanel({ exercise, initialCode, starterCode, locked, 
     saveTimer.current = window.setTimeout(() => onCodeChange(value), 800);
   };
 
+  const run = (mode: 'executar' | 'verificar'): Promise<RunResult> => {
+    if (exercise.type === 'sql') {
+      return mode === 'verificar' ? runSql(exercise.setup, code, exercise.tests, exercise.constraints) : runSql(exercise.setup, code);
+    }
+    return mode === 'verificar' ? runCode(code, exercise.tests, exercise.constraints) : runCode(code, []);
+  };
+
   const execute = async (mode: 'executar' | 'verificar') => {
     setRunning(mode);
-    const data = mode === 'verificar' ? await runCode(code, exercise.tests, exercise.constraints) : await runCode(code, []);
+    const data = await run(mode);
     setRunning(null);
     setResult({ mode, data });
     if (mode === 'verificar') onVerified(data, code);
@@ -42,7 +55,16 @@ export function CodeExercisePanel({ exercise, initialCode, starterCode, locked, 
 
   return (
     <div className="space-y-4">
-      <CodeEditor value={code} onChange={change} label={`Editor de código: ${exercise.title}`} />
+      {exercise.type === 'sql' && exercise.setup.trim() !== '' && (
+        <details className="rounded-lg border border-line bg-surface px-4 py-3 text-sm">
+          <summary className="flex cursor-pointer items-center gap-2 font-medium">
+            <Database size={14} className="text-accent-strong" aria-hidden /> Tabelas e dados do exercício
+          </summary>
+          <p className="mt-2 mb-3 text-muted">Este SQL é executado antes do seu código, em um banco novo a cada execução.</p>
+          <CodeBlock code={exercise.setup} language="sql" />
+        </details>
+      )}
+      <CodeEditor value={code} onChange={change} label={`Editor de código: ${exercise.title}`} language={isSql ? 'sql' : 'javascript'} />
       <div className="flex flex-wrap items-center gap-2">
         <Button onClick={() => execute('verificar')} disabled={running !== null || locked}>
           <ShieldCheck size={16} aria-hidden /> {running === 'verificar' ? 'Verificando…' : 'Verificar com testes'}
@@ -75,10 +97,11 @@ export function CodeExercisePanel({ exercise, initialCode, starterCode, locked, 
         )}
       </div>
       <p className="text-xs text-faint">
-        "Executar" roda o programa e mostra o console. "Verificar" roda os testes automatizados e registra uma tentativa. O código roda isolado no
-        seu navegador, com limite de tempo.
+        {isSql
+          ? '"Executar" roda o SQL e mostra o resultado. "Verificar" roda os testes automatizados e registra uma tentativa. O SQL roda em um PostgreSQL de verdade, isolado no seu navegador (a primeira execução leva alguns segundos para carregar o banco).'
+          : '"Executar" roda o programa e mostra o console. "Verificar" roda os testes automatizados e registra uma tentativa. O código roda isolado no seu navegador, com limite de tempo.'}
       </p>
-      {result && <RunResultView result={result.data} mode={result.mode} />}
+      {result && <RunResultView result={result.data} mode={result.mode} language={isSql ? 'sql' : 'javascript'} />}
     </div>
   );
 }

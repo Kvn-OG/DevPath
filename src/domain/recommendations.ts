@@ -1,6 +1,7 @@
 // Recomendações explicáveis: cada uma diz o motivo, com base nos registros.
 
-import { concepts, getAssessment, getConcept, getExercise, getLesson, getModule, lessonOfExercise, lessonsOfTrack, tracks } from '../content';
+import { concepts, getAssessment, getConcept, getExercise, getLesson, getModule, getProject, lessonOfExercise, lessonsOfTrack, tracks } from '../content';
+import type { Track } from '../types/content';
 import type { ProgressState } from '../types/progress';
 import { daysBetween } from './dates';
 import { conceptMastery, isAssessmentPassed, isLessonCompleted, missingPrerequisites } from './mastery';
@@ -109,28 +110,43 @@ export interface NextActivity {
   href: string;
 }
 
-/** Próxima atividade sugerida na trilha principal, com o motivo. */
+/**
+ * Próxima atividade sugerida, com o motivo: primeiro a aula começada mais
+ * recentemente; depois, a próxima etapa da primeira trilha disponível ainda não concluída.
+ */
 export function nextActivity(state: ProgressState): NextActivity {
-  const track = tracks.find((t) => t.status === 'completo')!;
-  const lessons = lessonsOfTrack(track);
+  const ready = tracks.filter((t) => t.status === 'completo');
+  const readyLessons = new Set(ready.flatMap((t) => lessonsOfTrack(t).map((l) => l.id)));
 
-  const inProgress = lessons.find((l) => state.lessons[l.id] && !isLessonCompleted(state, l.id));
+  const inProgress = Object.values(state.lessons)
+    .filter((l) => readyLessons.has(l.lessonId) && !l.completedAt)
+    .sort((a, b) => b.lastVisitedAt.localeCompare(a.lastVisitedAt))[0];
   if (inProgress) {
-    return { kind: 'aula', title: inProgress.title, description: 'Você começou esta aula e ainda não resolveu os dois exercícios.', href: `/aulas/${inProgress.id}` };
+    const lesson = getLesson(inProgress.lessonId)!;
+    return { kind: 'aula', title: lesson.title, description: 'Você começou esta aula e ainda não resolveu os dois exercícios.', href: `/aulas/${lesson.id}` };
   }
 
+  for (const [index, track] of ready.entries()) {
+    const next = nextInTrack(state, track, index === 0);
+    if (next) return next;
+  }
+
+  return { kind: 'concluido', title: 'Trilhas concluídas', description: 'Continue praticando com desafios e revisões enquanto as próximas trilhas são produzidas.', href: '/desafios' };
+}
+
+function nextInTrack(state: ProgressState, track: Track, offerDiagnostic: boolean): NextActivity | null {
   for (const module of track.modules) {
     const pending = module.lessonIds.map((id) => getLesson(id)!).find((l) => !isLessonCompleted(state, l.id));
     if (pending) {
       const fresh = Object.keys(state.lessons).length === 0 && state.assessments.length === 0;
-      if (fresh && track.diagnosticId) {
+      if (fresh && offerDiagnostic && track.diagnosticId) {
         return { kind: 'diagnostico', title: 'Avaliação diagnóstica', description: 'Seis perguntas rápidas para sugerir por onde começar. Ou vá direto para a primeira aula.', href: `/avaliacoes/${track.diagnosticId}` };
       }
       const blocked = missingPrerequisites(state, pending).length > 0;
       return {
         kind: 'aula',
         title: pending.title,
-        description: blocked ? 'Próxima aula da trilha (conclua os pré-requisitos antes).' : 'Próxima aula da trilha.',
+        description: blocked ? `Próxima aula da trilha ${track.shortTitle} (conclua os pré-requisitos antes).` : `Próxima aula da trilha ${track.shortTitle}.`,
         href: `/aulas/${pending.id}`,
       };
     }
@@ -140,8 +156,9 @@ export function nextActivity(state: ProgressState): NextActivity {
   }
 
   for (const projectId of track.projectIds) {
-    if (!state.projects[projectId]?.completedAt) {
-      return { kind: 'projeto', title: 'Projeto A — Calculadora de comissões e metas', description: 'Aplique tudo o que aprendeu em um projeto guiado em etapas.', href: `/projetos/${projectId}` };
+    const project = getProject(projectId);
+    if (project?.status === 'completo' && !state.projects[projectId]?.completedAt) {
+      return { kind: 'projeto', title: `Projeto ${project.letter} — ${project.title}`, description: 'Aplique tudo o que aprendeu em um projeto guiado em etapas.', href: `/projetos/${projectId}` };
     }
   }
 
@@ -149,7 +166,7 @@ export function nextActivity(state: ProgressState): NextActivity {
     return { kind: 'avaliacao', title: getAssessment(track.finalAssessmentId)!.title, description: 'Última etapa para concluir a trilha.', href: `/avaliacoes/${track.finalAssessmentId}` };
   }
 
-  return { kind: 'concluido', title: 'Trilha concluída', description: 'Continue praticando com desafios e revisões enquanto as próximas trilhas são produzidas.', href: '/desafios' };
+  return null;
 }
 
 /** Sugestão de ponto de partida a partir da avaliação diagnóstica. */

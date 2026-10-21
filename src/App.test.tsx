@@ -7,7 +7,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { AppRoutes } from './App';
-import { getExercise } from './content';
+import { getExercise, lessonExercises } from './content';
 import { shuffledStepIds } from './domain/grading';
 import { LOCAL_KEY } from './persistence/localRepository';
 import { AuthProvider } from './state/AuthProvider';
@@ -36,7 +36,7 @@ describe('dashboard', () => {
     renderAt('/');
     expect(await screen.findByRole('heading', { name: 'Bem-vindo ao DevPath' }, FIND)).toBeInTheDocument();
     expect(screen.getByText('sem tentativas ainda')).toBeInTheDocument();
-    expect(screen.getByText('0/24')).toBeInTheDocument();
+    expect(screen.getByText(`0/${lessonExercises.length}`)).toBeInTheDocument();
     expect(screen.getByText('Nenhuma revisão pendente')).toBeInTheDocument();
   });
 
@@ -96,7 +96,7 @@ describe('fluxo de aprendizagem da aula 1', () => {
 
     // …e restaurado em uma nova sessão.
     renderAt('/');
-    expect(await screen.findByText('2/24', {}, FIND)).toBeInTheDocument();
+    expect(await screen.findByText(`2/${lessonExercises.length}`, {}, FIND)).toBeInTheDocument();
     expect(screen.getByText('2 de 3 tentativas')).toBeInTheDocument();
   });
 

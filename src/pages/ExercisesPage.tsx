@@ -1,7 +1,7 @@
 import { CheckCircle2, Circle, XCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { lessonExercises, lessonOfExercise } from '../content';
+import { lessonExercises, lessonOfExercise, tracks } from '../content';
 import { DIFFICULTY_LABEL, EXERCISE_TYPE_LABEL } from '../components/exercise/labels';
 import { Badge, EmptyState, PageHeader } from '../components/ui/primitives';
 import { useProgress } from '../state/ProgressProvider';
@@ -14,11 +14,14 @@ export default function ExercisesPage() {
   const [difficulty, setDifficulty] = useState<Difficulty | 'todas'>('todas');
   const [type, setType] = useState('todos');
   const [status, setStatus] = useState<StatusFilter>('todos');
+  const [trackId, setTrackId] = useState('todas');
+  const readyTracks = tracks.filter((t) => t.status === 'completo');
 
   const types = useMemo(() => [...new Set(lessonExercises.map(EXERCISE_TYPE_LABEL))].sort(), []);
 
   const filtered = lessonExercises.filter((e) => {
     const p = state.exercises[e.id];
+    if (trackId !== 'todas' && lessonOfExercise(e.id)?.trackId !== trackId) return false;
     if (difficulty !== 'todas' && e.difficulty !== difficulty) return false;
     if (type !== 'todos' && EXERCISE_TYPE_LABEL(e) !== type) return false;
     if (status === 'pendentes' && p?.solved) return false;
@@ -37,11 +40,24 @@ export default function ExercisesPage() {
       />
 
       <div className="mb-6 flex flex-wrap gap-3" role="group" aria-label="Filtros">
+        {readyTracks.length > 1 && (
+          <label className="flex items-center gap-2 text-sm text-muted">
+            Trilha
+            <select className={select} value={trackId} onChange={(e) => setTrackId(e.target.value)}>
+              <option value="todas">Todas</option>
+              {readyTracks.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.shortTitle}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <label className="flex items-center gap-2 text-sm text-muted">
           Dificuldade
           <select className={select} value={difficulty} onChange={(e) => setDifficulty(e.target.value as Difficulty | 'todas')}>
             <option value="todas">Todas</option>
-            {(['iniciante', 'basico', 'intermediario'] as const).map((d) => (
+            {(['iniciante', 'basico', 'intermediario', 'avancado'] as const).map((d) => (
               <option key={d} value={d}>
                 {DIFFICULTY_LABEL[d]}
               </option>
