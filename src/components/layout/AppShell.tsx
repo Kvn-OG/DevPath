@@ -7,6 +7,8 @@ import {
   FolderKanban,
   LayoutDashboard,
   Library,
+  LogIn,
+  LogOut,
   Menu,
   RefreshCcw,
   Settings,
@@ -18,6 +20,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { computeXp, levelInfo } from '../../domain/gamification';
 import { dueReviews } from '../../domain/review';
 import { failedAttemptsByConcept } from '../../domain/recommendations';
+import { useAuth } from '../../state/AuthProvider';
 import { useProgress } from '../../state/ProgressProvider';
 import { cn } from '../../utils/cn';
 import { Logo } from './Logo';
@@ -35,7 +38,7 @@ const NAV = [
 ];
 
 export function AppShell() {
-  const { state, activeMode, status, error, ready } = useProgress();
+  const { state, activeMode, status, error, notice, ready } = useProgress();
   const [open, setOpen] = useState(false);
   const location = useLocation();
 
@@ -100,6 +103,7 @@ export function AppShell() {
         {nav}
         <div className="mt-auto space-y-3">
           {levelCard}
+          <AccountBox />
           <SyncIndicator status={status} mode={activeMode} error={error} />
         </div>
       </aside>
@@ -123,6 +127,7 @@ export function AppShell() {
         <div id="menu-movel" className="animate-fade-in space-y-4 border-b border-line bg-surface px-3 py-4 lg:hidden">
           {nav}
           {levelCard}
+          <AccountBox />
           <SyncIndicator status={status} mode={activeMode} error={error} />
         </div>
       )}
@@ -137,9 +142,40 @@ export function AppShell() {
               </Link>
             </div>
           )}
+          {notice && (
+            <div role="status" className="mb-6 rounded-lg border border-success/30 bg-success-soft px-4 py-2.5 text-sm text-fg">
+              {notice}
+            </div>
+          )}
           {ready ? <Outlet /> : <p className="text-muted">Carregando seu progresso…</p>}
         </div>
       </main>
+    </div>
+  );
+}
+
+function AccountBox() {
+  const auth = useAuth();
+  if (!auth.available || auth.loading) return null;
+  if (!auth.user) {
+    return (
+      <Link
+        to="/entrar"
+        className="flex items-center gap-2 rounded-lg border border-accent-strong/40 bg-accent-soft px-3 py-2 text-sm font-medium hover:border-accent-strong/70"
+      >
+        <LogIn size={16} aria-hidden className="text-accent-strong" />
+        Entrar para sincronizar
+      </Link>
+    );
+  }
+  return (
+    <div className="flex items-center gap-2 px-1 text-xs text-muted">
+      <span className="min-w-0 flex-1 truncate" title={auth.user.email}>
+        {auth.user.email}
+      </span>
+      <button type="button" onClick={() => auth.signOut()} className="flex items-center gap-1 rounded-md px-1.5 py-1 hover:bg-surface-2 hover:text-fg">
+        <LogOut size={13} aria-hidden /> Sair
+      </button>
     </div>
   );
 }

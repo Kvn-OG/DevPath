@@ -3,6 +3,7 @@ import { useRef, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { LOCAL_KEY } from '../persistence/localRepository';
 import { isProgressState } from '../persistence/repository';
+import { AuthForm, inputClass as input } from '../components/auth/AuthForm';
 import { Button } from '../components/ui/Button';
 import { Card, PageHeader, SectionTitle } from '../components/ui/primitives';
 import { useAuth } from '../state/AuthProvider';
@@ -10,8 +11,6 @@ import { useProgress } from '../state/ProgressProvider';
 import type { DataMode } from '../types/progress';
 import { cn } from '../utils/cn';
 import { readTheme, saveTheme, type ThemePreference } from '../utils/theme';
-
-const input = 'h-10 w-full rounded-lg border border-line bg-bg px-3 text-sm outline-none focus:border-accent-strong/60';
 
 export default function SettingsPage() {
   return (
@@ -109,26 +108,28 @@ function AppearanceSection() {
 }
 
 function DataModeSection() {
-  const { mode, activeMode, setMode } = useProgress();
+  const { mode, setMode } = useProgress();
   const auth = useAuth();
-  const options: { value: DataMode; title: string; text: string; disabled?: boolean }[] = [
-    { value: 'local', title: 'Meu progresso (neste navegador)', text: 'Padrão. Funciona sem internet e sem conta. Os dados ficam no armazenamento local deste navegador.' },
+  const options: { value: DataMode; title: string; text: string }[] = [
+    {
+      value: 'local',
+      title: 'Meu progresso',
+      text: auth.user
+        ? 'Sincronizado com a sua conta: o mesmo progresso em qualquer dispositivo.'
+        : auth.available
+          ? 'Salvo neste navegador. Entre na sua conta para acessá-lo em qualquer dispositivo.'
+          : 'Funciona sem internet e sem conta. Os dados ficam no armazenamento local deste navegador.',
+    },
     {
       value: 'demo',
       title: 'Modo demonstração',
       text: 'Carrega um progresso FICTÍCIO para conhecer a plataforma. Fica separado do seu progresso real, que não é alterado.',
     },
-    {
-      value: 'supabase',
-      title: 'Sincronizar com Supabase',
-      text: auth.available ? 'Salva o progresso na sua conta, acessível em qualquer dispositivo. Requer login (abaixo).' : 'Indisponível: o Supabase não está configurado nesta instalação (veja o README).',
-      disabled: !auth.available,
-    },
   ];
   return (
     <section aria-labelledby="dados">
-      <SectionTitle id="dados">Onde salvar o progresso</SectionTitle>
-      <fieldset className="grid gap-2 md:grid-cols-3">
+      <SectionTitle id="dados">Progresso exibido</SectionTitle>
+      <fieldset className="grid gap-2 md:grid-cols-2">
         <legend className="sr-only">Modo de dados</legend>
         {options.map((o) => (
           <label
@@ -136,18 +137,14 @@ function DataModeSection() {
             className={cn(
               'cursor-pointer rounded-xl border p-4 text-sm',
               mode === o.value ? 'border-accent-strong/70 bg-accent-soft' : 'border-line bg-surface',
-              o.disabled && 'cursor-not-allowed opacity-60',
             )}
           >
-            <input type="radio" name="modo" className="sr-only" checked={mode === o.value} disabled={o.disabled} onChange={() => setMode(o.value)} />
+            <input type="radio" name="modo" className="sr-only" checked={mode === o.value} onChange={() => setMode(o.value)} />
             <div className="font-medium">{o.title}</div>
             <div className="mt-1 text-muted">{o.text}</div>
           </label>
         ))}
       </fieldset>
-      {mode === 'supabase' && activeMode !== 'supabase' && (
-        <p className="mt-2 text-sm text-warning">Entre na sua conta para usar a sincronização. Enquanto isso, o progresso local está em uso.</p>
-      )}
     </section>
   );
 }
@@ -156,10 +153,6 @@ function AccountSection() {
   const auth = useAuth();
   const { activeMode, actions } = useProgress();
   const [params] = useSearchParams();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [tab, setTab] = useState<'entrar' | 'cadastrar' | 'recuperar'>('entrar');
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [newPassword, setNewPassword] = useState('');
@@ -190,7 +183,7 @@ function AccountSection() {
 
   return (
     <section aria-labelledby="conta">
-      <SectionTitle id="conta">Conta Supabase</SectionTitle>
+      <SectionTitle id="conta">Conta</SectionTitle>
       <Card className="space-y-4">
         {auth.user ? (
           <>
@@ -227,66 +220,8 @@ function AccountSection() {
           </>
         ) : (
           <>
-            <div role="tablist" className="flex gap-1">
-              {(
-                [
-                  ['entrar', 'Entrar'],
-                  ['cadastrar', 'Criar conta'],
-                  ['recuperar', 'Esqueci a senha'],
-                ] as const
-              ).map(([id, label]) => (
-                <button
-                  key={id}
-                  role="tab"
-                  type="button"
-                  aria-selected={tab === id}
-                  onClick={() => {
-                    setTab(id);
-                    setMessage(null);
-                  }}
-                  className={cn('rounded-lg px-3 py-1.5 text-sm', tab === id ? 'bg-accent-soft text-fg' : 'text-muted hover:text-fg')}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            <form
-              className="grid max-w-md gap-3"
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (tab === 'entrar') run(() => auth.signIn(email, password), 'Login realizado.');
-                else if (tab === 'cadastrar') run(() => auth.signUp(email, password, displayName), 'Conta criada. Se a confirmação por e-mail estiver ativa, confirme pelo link enviado.');
-                else run(() => auth.requestPasswordReset(email), 'Se o e-mail existir, você receberá um link para redefinir a senha.');
-              }}
-            >
-              {tab === 'cadastrar' && (
-                <label className="text-sm">
-                  <span className="mb-1 block text-muted">Nome</span>
-                  <input className={input} value={displayName} onChange={(e) => setDisplayName(e.target.value)} autoComplete="name" />
-                </label>
-              )}
-              <label className="text-sm">
-                <span className="mb-1 block text-muted">E-mail</span>
-                <input className={input} type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
-              </label>
-              {tab !== 'recuperar' && (
-                <label className="text-sm">
-                  <span className="mb-1 block text-muted">Senha (mínimo 6 caracteres)</span>
-                  <input
-                    className={input}
-                    type="password"
-                    required
-                    minLength={6}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete={tab === 'entrar' ? 'current-password' : 'new-password'}
-                  />
-                </label>
-              )}
-              <Button type="submit" disabled={busy} className="justify-self-start">
-                {busy ? 'Aguarde…' : tab === 'entrar' ? 'Entrar' : tab === 'cadastrar' ? 'Criar conta' : 'Enviar link'}
-              </Button>
-            </form>
+            <p className="text-sm text-muted">Entre para sincronizar seu progresso entre dispositivos.</p>
+            <AuthForm />
           </>
         )}
         {message && (
