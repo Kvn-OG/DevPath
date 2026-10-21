@@ -67,6 +67,24 @@ describe('integridade de referências', () => {
     }
     for (const a of assessments) for (const id of a.exerciseIds) expect(getExercise(id), id).toBeDefined();
   });
+  it('trilhas disponíveis têm módulos com aulas da própria trilha e do próprio módulo', () => {
+    for (const track of tracks.filter((t) => t.status === 'completo')) {
+      for (const module of track.modules) {
+        expect(module.status, module.id).toBe('completo');
+        expect(module.lessonIds.length, module.id).toBeGreaterThan(0);
+        for (const id of module.lessonIds) {
+          expect(getLesson(id)?.trackId, id).toBe(track.id);
+          expect(getLesson(id)?.moduleId, id).toBe(module.id);
+        }
+      }
+      if (track.finalAssessmentId) expect(assessments.some((a) => a.id === track.finalAssessmentId), track.id).toBe(true);
+    }
+  });
+  it('toda aula aparece em exatamente um módulo', () => {
+    const listed = tracks.flatMap((t) => t.modules.flatMap((m) => m.lessonIds));
+    expect(new Set(listed).size).toBe(listed.length);
+    for (const lesson of lessons) expect(listed, lesson.id).toContain(lesson.id);
+  });
   it('cada exercício tem três dicas e uma solução explicada', () => {
     for (const e of allExercises) {
       expect(e.hints.every((h) => h.trim().length > 10), e.id).toBe(true);
