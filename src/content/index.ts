@@ -7,6 +7,8 @@ import { bancoAssessmentExercises, bancoAssessments } from './banco/assessments'
 import { challenges } from './challenges';
 import { golangConcepts, golangLessonModules } from './golang';
 import { golangAssessmentExercises, golangAssessments } from './golang/assessments';
+import { infraConcepts, infraLessonModules } from './infra';
+import { infraAssessmentExercises, infraAssessments } from './infra/assessments';
 import { logicaAssessments, assessmentExercises } from './logica/assessments';
 import { logicaConcepts } from './logica/concepts';
 import * as l01 from './logica/lessons/01-o-que-e-programar';
@@ -24,19 +26,19 @@ import * as l12 from './logica/lessons/12-depuracao';
 import { projects } from './projects';
 import { tracks } from './tracks';
 
-const lessonModules = [l01, l02, l03, l04, l05, l06, l07, l08, l09, l10, l11, l12, ...bancoLessonModules, ...golangLessonModules];
+const lessonModules = [l01, l02, l03, l04, l05, l06, l07, l08, l09, l10, l11, l12, ...bancoLessonModules, ...golangLessonModules, ...infraLessonModules];
 
 export const lessons: Lesson[] = lessonModules.map((m) => m.lesson);
 export const lessonExercises: Exercise[] = lessonModules.flatMap((m) => m.exercises);
-export const assessments: Assessment[] = [...logicaAssessments, ...bancoAssessments, ...golangAssessments];
-export const concepts: Concept[] = [...logicaConcepts, ...bancoConcepts, ...golangConcepts];
+export const assessments: Assessment[] = [...logicaAssessments, ...bancoAssessments, ...golangAssessments, ...infraAssessments];
+export const concepts: Concept[] = [...logicaConcepts, ...bancoConcepts, ...golangConcepts, ...infraConcepts];
 export { challenges, projects, tracks };
 
 const challengeExercises = challenges.flatMap((c) => (c.exercise ? [c.exercise] : []));
 const projectExercises = projects.flatMap((p) => p.steps.map((s) => s.exercise));
 
 /** Todos os exercícios, de qualquer origem, indexados por ID. */
-export const allExercises: Exercise[] = [...lessonExercises, ...assessmentExercises, ...bancoAssessmentExercises, ...golangAssessmentExercises, ...challengeExercises, ...projectExercises];
+export const allExercises: Exercise[] = [...lessonExercises, ...assessmentExercises, ...bancoAssessmentExercises, ...golangAssessmentExercises, ...infraAssessmentExercises, ...challengeExercises, ...projectExercises];
 
 const byId = <T extends { id: string }>(items: T[]) => new Map(items.map((i) => [i.id, i]));
 const lessonMap = byId(lessons);
