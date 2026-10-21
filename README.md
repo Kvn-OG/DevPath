@@ -48,9 +48,8 @@ Múltipla escolha · verdadeiro/falso com justificativa · preencher lacunas · 
 - Pré-requisitos entre aulas, com opção “Abrir mesmo assim” para consulta.
 
 ### Modos de dados
-- **Local (padrão)**: progresso real, salvo no `localStorage`.
+- **Meu progresso (padrão)**: sem login, salvo no `localStorage`. Com login (Supabase configurado), sincronizado com a conta e disponível em qualquer dispositivo. No primeiro login, se a conta estiver vazia, o progresso do navegador é enviado para ela automaticamente.
 - **Demonstração**: progresso **fictício**, gerado pelas mesmas regras do sistema, salvo separadamente e sinalizado com um aviso em todas as páginas. Não altera o progresso real.
-- **Supabase (opcional)**: sincroniza com sua conta.
 
 Exportar/importar progresso em JSON fica em Configurações.
 
@@ -87,8 +86,9 @@ Decisões principais:
    VITE_SUPABASE_ANON_KEY=sua-chave-anon-publica
    ```
    Use **somente** a chave pública `anon`. A `service_role` nunca deve ir para o front-end ou para o repositório. `.env.local` já está no `.gitignore`.
-4. Em *Authentication → URL Configuration*, adicione `http://localhost:5173/configuracoes` às Redirect URLs (para a recuperação de senha).
-5. Reinicie `npm run dev`. Em **Configurações**, crie uma conta ou entre e escolha “Sincronizar com Supabase”. Você pode importar o progresso local para a conta.
+4. Em *Authentication → URL Configuration*, defina a **Site URL** como o endereço de produção (ex.: `https://seu-app.vercel.app`) e adicione às Redirect URLs `http://localhost:5173/**` e `https://seu-app.vercel.app/**` (confirmação de e-mail e recuperação de senha).
+5. Na Vercel, cadastre as mesmas duas variáveis em *Project Settings → Environment Variables* e faça um novo deploy (variáveis `VITE_` entram no build).
+6. Reinicie `npm run dev`. Use **Entrar para sincronizar** (barra lateral) ou a página `/entrar` para criar a conta ou entrar.
 
 Segurança: RLS está habilitado em todas as tabelas e cada política restringe o acesso a `auth.uid() = user_id`. Tentativas e resultados de avaliação não têm política de UPDATE (histórico imutável). Falhas de conexão não perdem dados: o progresso fica em cache local e é reenviado automaticamente.
 

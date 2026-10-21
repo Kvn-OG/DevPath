@@ -34,13 +34,15 @@ export interface ProgressActions {
 interface ProgressContextValue {
   state: ProgressState;
   actions: ProgressActions;
-  /** Modo escolhido pelo estudante. */
+  /** Modo escolhido pelo estudante: o próprio progresso ou a demonstração. */
   mode: DataMode;
-  /** Modo efetivamente em uso (Supabase sem login cai para local). */
+  /** Modo efetivamente em uso: com login, o próprio progresso é sincronizado com a conta. */
   activeMode: DataMode;
   setMode(mode: DataMode): void;
   status: SyncStatus;
   error: string | null;
+  /** Aviso informativo (ex.: progresso deste navegador enviado para a conta). */
+  notice: string | null;
   ready: boolean;
 }
 
@@ -49,7 +51,8 @@ const ProgressContext = createContext<ProgressContextValue | null>(null);
 function readStoredMode(): DataMode {
   try {
     const value = window.localStorage.getItem(MODE_KEY);
-    return value === 'demo' || value === 'supabase' ? value : 'local';
+    // 'supabase' (versões antigas) virou o padrão: sincroniza sempre que houver login.
+    return value === 'demo' ? 'demo' : 'local';
   } catch {
     return 'local';
   }
@@ -62,10 +65,11 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [status, setStatus] = useState<SyncStatus>('carregando');
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const loadedState = useRef<ProgressState | null>(null);
 
   const supabase = getSupabase();
-  const activeMode: DataMode = mode === 'supabase' && !(supabase && auth.user) ? 'local' : mode;
+  const activeMode: DataMode = mode === 'demo' ? 'demo' : supabase && auth.user ? 'supabase' : 'local';
 
   const repository = useMemo<ProgressRepository>(() => {
     if (activeMode === 'supabase') return new SupabaseRepository(supabase!, auth.user!.id);
@@ -75,17 +79,29 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
 
   // Carrega o estado sempre que o repositório muda (troca de modo, login, logout).
   useEffect(() => {
-    if (mode === 'supabase' && auth.loading) return;
+    if (mode !== 'demo' && auth.loading) return;
     let cancelled = false;
     setReady(false);
     setStatus('carregando');
     setError(null);
+    setNotice(null);
     repository
       .load()
-      .then((loaded) => {
+      .then(async (loaded) => {
         if (cancelled) return;
-        const initial = loaded ?? (repository.mode === 'demo' ? buildDemoState() : createInitialState());
-        loadedState.current = loaded ? initial : null; // estado novo precisa ser salvo
+        let initial = loaded ?? (repository.mode === 'demo' ? buildDemoState() : createInitialState());
+        let adopted = false;
+        // Primeiro login: a conta ainda está vazia, então leva junto o progresso feito neste navegador.
+        if (repository.mode === 'supabase' && !hasActivity(initial)) {
+          const local = await new LocalStorageRepository('local', LOCAL_KEY).load().catch(() => null);
+          if (cancelled) return;
+          if (local && hasActivity(local)) {
+            initial = { ...local, profile: { ...local.profile, name: local.profile.name || initial.profile.name } };
+            adopted = true;
+            setNotice('O progresso deste navegador foi enviado para a sua conta.');
+          }
+        }
+        loadedState.current = loaded && !adopted ? initial : null; // estado novo precisa ser salvo
         dispatch({ type: 'STATE_REPLACED', state: initial });
         if (repository instanceof SupabaseRepository && repository.loadedFromCache) {
           setError('Sem conexão com o Supabase: usando a cópia salva neste navegador. As alterações serão enviadas quando a conexão voltar.');
@@ -165,11 +181,23 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   }, [repository]);
 
   const value = useMemo(
-    () => ({ state, actions, mode, activeMode, setMode, status, error, ready }),
-    [state, actions, mode, activeMode, setMode, status, error, ready],
+    () => ({ state, actions, mode, activeMode, setMode, status, error, notice, ready }),
+    [state, actions, mode, activeMode, setMode, status, error, notice, ready],
   );
 
   return <ProgressContext.Provider value={value}>{children}</ProgressContext.Provider>;
+}
+
+/** true quando há algum progresso real (não só o perfil criado no cadastro). */
+export function hasActivity(state: ProgressState): boolean {
+  return (
+    state.attempts.length > 0 ||
+    state.assessments.length > 0 ||
+    Object.keys(state.lessons).length > 0 ||
+    Object.keys(state.exercises).length > 0 ||
+    Object.keys(state.challenges).length > 0 ||
+    Object.keys(state.projects).length > 0
+  );
 }
 
 export function useProgress(): ProgressContextValue {
