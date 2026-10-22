@@ -15,10 +15,16 @@ interface AuthContextValue {
   signUp(email: string, password: string, displayName: string): Promise<string | null>;
   signIn(email: string, password: string): Promise<string | null>;
   signOut(): Promise<void>;
+  /** Confirma o e-mail com o código de 6 dígitos enviado no cadastro. */
+  verifyEmail(email: string, code: string): Promise<string | null>;
+  resendVerificationCode(email: string): Promise<string | null>;
+  /** Envia um código de recuperação para o e-mail. */
   requestPasswordReset(email: string): Promise<string | null>;
-  /** Define a nova senha com o token que chega pelo link do e-mail de recuperação. */
-  resetPassword(token: string, password: string): Promise<string | null>;
+  resetPassword(email: string, code: string, password: string): Promise<string | null>;
 }
+
+/** Mensagem de erro de login com e-mail ainda não confirmado (o formulário pede o código). */
+export const EMAIL_NOT_VERIFIED_MESSAGE = 'Confirme seu e-mail com o código que enviamos antes de entrar.';
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -33,12 +39,14 @@ function translateAuthError(error: AuthError): string {
   const code = error.code ?? '';
   const message = error.message ?? '';
   if (code === 'INVALID_EMAIL_OR_PASSWORD' || /invalid email or password/i.test(message)) return 'E-mail ou senha incorretos.';
-  if (code === 'EMAIL_NOT_VERIFIED' || /not verified/i.test(message)) return 'Confirme seu e-mail pelo link enviado antes de entrar.';
+  if (code === 'EMAIL_NOT_VERIFIED' || /not verified/i.test(message)) return EMAIL_NOT_VERIFIED_MESSAGE;
+  if (code === 'INVALID_OTP' || /invalid otp/i.test(message)) return 'Código incorreto. Confira o último e-mail recebido.';
+  if (code === 'OTP_EXPIRED' || /otp expired/i.test(message)) return 'O código expirou. Peça um novo.';
+  if (code === 'TOO_MANY_ATTEMPTS') return 'Muitas tentativas com este código. Peça um novo.';
   if (code.startsWith('USER_ALREADY_EXISTS') || /already exists/i.test(message)) return 'Já existe uma conta com este e-mail.';
   if (code === 'PASSWORD_TOO_SHORT') return 'A senha precisa ter pelo menos 8 caracteres.';
   if (code === 'PASSWORD_TOO_LONG') return 'A senha é longa demais.';
   if (code === 'INVALID_EMAIL') return 'E-mail inválido.';
-  if (code === 'INVALID_TOKEN' || /invalid token/i.test(message)) return 'O link expirou ou já foi usado. Peça um novo em "Esqueci a senha".';
   if (error.status === 429 || /rate limit|too many/i.test(message)) return 'Muitas tentativas em pouco tempo. Aguarde alguns minutos.';
   if (/fetch|network/i.test(message)) return 'Sem conexão com o servidor de login. Verifique sua internet.';
   return message || 'Não foi possível concluir. Tente de novo.';
@@ -77,15 +85,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       available: !!neon,
       loading,
       user,
-      signUp: (email, password, displayName) =>
-        run(() => neon!.auth.signUp.email({ email, password, name: displayName, callbackURL: window.location.origin })),
+      // O Neon Auth confirma e-mail e recupera senha por código (OTP), não por link.
+      signUp: (email, password, displayName) => run(() => neon!.auth.signUp.email({ email, password, name: displayName })),
       signIn: (email, password) => run(() => neon!.auth.signIn.email({ email, password })),
       signOut: async () => {
         await neon?.auth.signOut();
       },
-      requestPasswordReset: (email) =>
-        run(() => neon!.auth.requestPasswordReset({ email, redirectTo: `${window.location.origin}/configuracoes?redefinir=1` })),
-      resetPassword: (token, password) => run(() => neon!.auth.resetPassword({ newPassword: password, token })),
+      verifyEmail: (email, code) => run(() => neon!.auth.emailOtp.verifyEmail({ email, otp: code })),
+      resendVerificationCode: (email) => run(() => neon!.auth.emailOtp.sendVerificationOtp({ email, type: 'email-verification' })),
+      requestPasswordReset: (email) => run(() => neon!.auth.emailOtp.requestPasswordReset({ email })),
+      resetPassword: (email, code, password) => run(() => neon!.auth.emailOtp.resetPassword({ email, otp: code, password })),
     };
   }, [neon, user, loading]);
 

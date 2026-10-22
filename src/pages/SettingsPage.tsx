@@ -1,6 +1,5 @@
 import { Download, Upload } from 'lucide-react';
 import { useRef, useState, type FormEvent } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { LOCAL_KEY } from '../persistence/localRepository';
 import { isProgressState } from '../persistence/repository';
 import { AuthForm, inputClass as input } from '../components/auth/AuthForm';
@@ -152,22 +151,9 @@ function DataModeSection() {
 function AccountSection() {
   const auth = useAuth();
   const { activeMode, actions } = useProgress();
-  const [params] = useSearchParams();
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
-  const [passwordReset, setPasswordReset] = useState(false);
-  const resetToken = params.get('redefinir') ? params.get('token') : null;
 
   if (!auth.available) return null;
-
-  const run = async (fn: () => Promise<string | null>, success: string) => {
-    setBusy(true);
-    const error = await fn();
-    setBusy(false);
-    setMessage(error ? { ok: false, text: error } : { ok: true, text: success });
-    return error;
-  };
 
   const importLocal = () => {
     try {
@@ -188,28 +174,6 @@ function AccountSection() {
     <section aria-labelledby="conta">
       <SectionTitle id="conta">Conta</SectionTitle>
       <Card className="space-y-4">
-        {/* O link do e-mail de recuperação volta para cá com ?redefinir=1&token=... (ou &error=INVALID_TOKEN). */}
-        {resetToken && !passwordReset && (
-          <form
-            className="flex flex-wrap items-end gap-2"
-            onSubmit={async (e) => {
-              e.preventDefault();
-              const error = await run(() => auth.resetPassword(resetToken, newPassword), 'Senha atualizada. Entre com a nova senha.');
-              if (!error) setPasswordReset(true);
-            }}
-          >
-            <label className="text-sm">
-              <span className="mb-1 block text-muted">Nova senha (mínimo 8 caracteres)</span>
-              <input className={input} type="password" minLength={8} required value={newPassword} onChange={(e) => setNewPassword(e.target.value)} autoComplete="new-password" />
-            </label>
-            <Button type="submit" disabled={busy}>
-              Atualizar senha
-            </Button>
-          </form>
-        )}
-        {params.get('redefinir') && params.get('error') && (
-          <p className="text-sm text-danger">O link de redefinição expirou ou já foi usado. Peça um novo em "Esqueci a senha".</p>
-        )}
         {auth.user ? (
           <>
             <p className="text-sm">
