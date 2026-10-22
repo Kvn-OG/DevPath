@@ -5,7 +5,7 @@ import { trackProgress } from '../domain/mastery';
 import { tracks } from '../content';
 import { buildDemoState, DEMO_PROFILE_NAME } from './demoSeed';
 import { LOCAL_KEY, LocalStorageRepository } from './localRepository';
-import { changedRows, rowsToState, stateToRows } from './supabaseMapping';
+import { changedRows, rowsToState, stateToRows } from './neonMapping';
 
 describe('LocalStorageRepository', () => {
   beforeEach(() => window.localStorage.clear());
@@ -45,7 +45,7 @@ describe('dados de demonstração', () => {
   });
 });
 
-describe('mapeamento Supabase', () => {
+describe('mapeamento Neon', () => {
   it('converte estado → linhas → estado sem perdas', () => {
     const state = buildDemoState(new Date('2026-05-10T12:00:00'));
     const back = rowsToState(stateToRows(state, 'user-1'));

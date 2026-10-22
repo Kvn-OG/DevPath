@@ -2,7 +2,7 @@ import type { DataMode, ProgressState } from '../types/progress';
 
 /**
  * Abstração de persistência. A interface nunca fala com localStorage ou
- * Supabase diretamente: ela usa o ProgressProvider, que usa um repositório.
+ * Neon diretamente: ela usa o ProgressProvider, que usa um repositório.
  */
 export interface ProgressRepository {
   readonly mode: DataMode;

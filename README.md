@@ -53,7 +53,7 @@ Múltipla escolha · verdadeiro/falso com justificativa · preencher lacunas · 
 - Pré-requisitos entre aulas, com opção “Abrir mesmo assim” para consulta.
 
 ### Modos de dados
-- **Meu progresso (padrão)**: sem login, salvo no `localStorage`. Com login (Supabase configurado), sincronizado com a conta e disponível em qualquer dispositivo. No primeiro login, se a conta estiver vazia, o progresso do navegador é enviado para ela automaticamente.
+- **Meu progresso (padrão)**: sem login, salvo no `localStorage`. Com login (Neon configurado), sincronizado com a conta e disponível em qualquer dispositivo. No primeiro login, se a conta estiver vazia, o progresso do navegador é enviado para ela automaticamente.
 - **Demonstração**: progresso **fictício**, gerado pelas mesmas regras do sistema, salvo separadamente e sinalizado com um aviso em todas as páginas. Não altera o progresso real.
 
 Exportar/importar progresso em JSON fica em Configurações.
@@ -68,34 +68,37 @@ src/
   types/         Tipos de conteúdo e de progresso
   domain/        Regras puras: correção, domínio, revisão espaçada, XP, estatísticas, recomendações, reducer de progresso
   sandbox/       Execução isolada de código (avaliador, Web Worker, formatação, tradução de erros)
-  persistence/   Repositórios (localStorage, demonstração, Supabase) e mapeamento para tabelas
+  persistence/   Repositórios (localStorage, demonstração, Neon) e mapeamento para tabelas
   state/         Providers React (autenticação opcional e progresso com salvamento automático)
   components/    UI: layout, primitivos, código, exercícios, aula
   pages/         Uma página por rota
-supabase/migrations/  SQL das tabelas, constraints, índices e políticas RLS
+neon/migrations/      SQL das tabelas, constraints, índices e políticas RLS
 ```
 
 Decisões principais:
 - **Conteúdo separado da interface**: novas aulas são arquivos em `src/content/...` registrados em `src/content/index.ts`. Nenhum componente precisa mudar.
-- **Toda mudança de progresso passa por um reducer puro** (`domain/progressReducer.ts`). A persistência só salva o estado resultante, através da interface `ProgressRepository`. Trocar localStorage por Supabase não toca na UI.
+- **Toda mudança de progresso passa por um reducer puro** (`domain/progressReducer.ts`). A persistência só salva o estado resultante, através da interface `ProgressRepository`. Trocar localStorage pelo Neon (ou o Neon por outro banco) não toca na UI.
 - **Estatísticas são derivadas** dos registros (tentativas, aulas, avaliações). Nada é armazenado “pronto” e nenhum número é inventado: sem tentativas, a taxa de acertos aparece como “—”.
 - **Testes de conteúdo** garantem que toda solução oficial passa nos próprios testes, que nenhum código inicial passa sozinho e que toda saída esperada confere com a execução real.
 
-## Configuração opcional do Supabase
+## Configuração opcional do Neon (login e sincronização)
 
-1. Crie um projeto em [supabase.com](https://supabase.com).
-2. No **SQL Editor**, execute `supabase/migrations/001_progress.sql` (tabelas de progresso, constraints, índices, gatilho de perfil e RLS). O arquivo `002_content_catalog.sql` é opcional: ele documenta o modelo relacional do catálogo de conteúdo para uma futura gestão via CMS; o app não depende dele.
-3. Copie `.env.example` para `.env.local` e preencha com os valores de *Project Settings → API*:
+1. Crie um banco Neon. Pela Vercel: *Storage → Create Database → Neon*, conectado ao projeto. Também dá para criar direto em [neon.com](https://neon.com).
+2. No console do Neon, ative o **Neon Auth** (Better Auth) e a **Data API**. Na Data API, marque *Use Neon Auth* e deixe *Grant public schema access* **desmarcado**: as permissões ficam no SQL do passo 3.
+3. No **SQL Editor** do Neon, execute `neon/migrations/001_progress.sql` (tabelas de progresso, constraints, índices, permissões e RLS). O arquivo `002_content_catalog.sql` é opcional: ele documenta o modelo relacional do catálogo de conteúdo para uma futura gestão via CMS; o app não depende dele.
+4. Em *Settings → Better Auth*:
+   - em **Domains**, adicione o endereço de produção (ex.: `https://seu-app.vercel.app`) e mantenha **Allow Localhost** ligado para desenvolvimento;
+   - ative **Verify at Sign-up** para exigir a confirmação do e-mail;
+   - troque o **Application Name** pelo nome que deve aparecer nos e-mails.
+5. Copie `.env.example` para `.env.local` e preencha com a URL pública do banco: a **API URL** da Data API sem `.apirest` e sem `/rest/v1`.
    ```
-   VITE_SUPABASE_URL=https://xxxx.supabase.co
-   VITE_SUPABASE_ANON_KEY=sua-chave-anon-publica
+   VITE_NEON_URL=https://ep-xxx.c-2.us-east-1.aws.neon.tech/neondb
    ```
-   Use **somente** a chave pública `anon`. A `service_role` nunca deve ir para o front-end ou para o repositório. `.env.local` já está no `.gitignore`.
-4. Em *Authentication → URL Configuration*, defina a **Site URL** como o endereço de produção (ex.: `https://seu-app.vercel.app`) e adicione às Redirect URLs `http://localhost:5173/**` e `https://seu-app.vercel.app/**` (confirmação de e-mail e recuperação de senha).
-5. Na Vercel, cadastre as mesmas duas variáveis em *Project Settings → Environment Variables* e faça um novo deploy (variáveis `VITE_` entram no build).
-6. Reinicie `npm run dev`. Use **Entrar para sincronizar** (barra lateral) ou a página `/entrar` para criar a conta ou entrar.
+   Essa URL não tem senha. A connection string do Postgres (com senha) nunca deve ir para o front-end ou para o repositório. `.env.local` já está no `.gitignore`.
+6. Na Vercel, cadastre a mesma variável em *Project Settings → Environment Variables* e faça um novo deploy (variáveis `VITE_` entram no build).
+7. Reinicie `npm run dev`. Use **Entrar para sincronizar** (barra lateral) ou a página `/entrar` para criar a conta ou entrar.
 
-Segurança: RLS está habilitado em todas as tabelas e cada política restringe o acesso a `auth.uid() = user_id`. Tentativas e resultados de avaliação não têm política de UPDATE (histórico imutável). Falhas de conexão não perdem dados: o progresso fica em cache local e é reenviado automaticamente.
+Segurança: RLS está habilitado em todas as tabelas e cada política restringe o acesso a `auth.user_id() = user_id` (o `sub` do JWT do Neon Auth). O papel `authenticated` só recebe permissão nas tabelas de progresso. Tentativas e resultados de avaliação não têm UPDATE (histórico imutável). Falhas de conexão não perdem dados: o progresso fica em cache local e é reenviado automaticamente.
 
 ## Testes
 
@@ -104,7 +107,7 @@ Segurança: RLS está habilitado em todas as tabelas e cada política restringe 
 - avaliador do sandbox (testes, erros, isolamento, restrições);
 - correção dos formatos não-código;
 - regras de progresso, revisão, recomendações, XP e estatísticas;
-- persistência local, dados de demonstração e mapeamento Supabase;
+- persistência local, dados de demonstração e mapeamento para as tabelas do Neon;
 - fluxo de ponta a ponta na interface: abrir a aula 1, errar, receber feedback, acertar, concluir a aula, salvar e restaurar o progresso, além das dicas, dos pré-requisitos e da navegação por todas as páginas.
 
 ## Limitações conhecidas
@@ -117,13 +120,13 @@ Segurança: RLS está habilitado em todas as tabelas e cada política restringe 
 - Go, Java, shell e React ainda não têm ambiente de execução (sugestão: um executor remoto isolado para Go e Java).
 - O PostgreSQL do navegador (PGlite) baixa cerca de 16 MB (wasm + dados) na primeira execução de SQL; depois fica em cache. Ele roda com `fsync` desligado e um único usuário: serve para aprender SQL, não para medir desempenho.
 - Conquistas são derivadas do progresso e não guardam a data de desbloqueio.
-- O cliente Supabase entra no bundle inicial (~60 kB gzip) mesmo sem configuração.
+- O cliente Neon (Auth + Data API) entra no bundle inicial mesmo sem configuração.
 
 ## Próximas melhorias recomendadas
 
 1. Produzir a Trilha 2 (Fundamentos da Web) e o Projeto B, com exercícios de HTML/CSS/DOM validados em um iframe isolado.
 2. Executor remoto isolado para Go, transformando os exercícios da Trilha 10 em exercícios de código com testes.
 3. Indicar a linha do erro no editor (mapeando o stack trace do worker).
-4. Carregar o Supabase sob demanda (import dinâmico) quando configurado.
+4. Carregar o cliente Neon sob demanda (import dinâmico) quando configurado.
 5. Testes E2E em navegador real (Playwright) cobrindo os exercícios de código.
 6. Registrar a data de desbloqueio das conquistas e mostrar uma notificação discreta.

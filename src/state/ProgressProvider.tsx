@@ -4,8 +4,8 @@ import { createInitialState, progressReducer } from '../domain/progressReducer';
 import { buildDemoState } from '../persistence/demoSeed';
 import { DEMO_KEY, LOCAL_KEY, LocalStorageRepository } from '../persistence/localRepository';
 import type { ProgressRepository } from '../persistence/repository';
-import { getSupabase } from '../persistence/supabaseClient';
-import { SupabaseRepository } from '../persistence/supabaseRepository';
+import { getNeon } from '../persistence/neonClient';
+import { NeonRepository } from '../persistence/neonRepository';
 import type { AssessmentResult, AttemptSource, DataMode, Profile, ProgressState } from '../types/progress';
 import { useAuth } from './AuthProvider';
 
@@ -52,6 +52,7 @@ function readStoredMode(): DataMode {
   try {
     const value = window.localStorage.getItem(MODE_KEY);
     // 'supabase' (versões antigas) virou o padrão: sincroniza sempre que houver login.
+    // 'nuvem' nunca é gravado: depende só de haver login.
     return value === 'demo' ? 'demo' : 'local';
   } catch {
     return 'local';
@@ -68,14 +69,14 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   const [notice, setNotice] = useState<string | null>(null);
   const loadedState = useRef<ProgressState | null>(null);
 
-  const supabase = getSupabase();
-  const activeMode: DataMode = mode === 'demo' ? 'demo' : supabase && auth.user ? 'supabase' : 'local';
+  const neon = getNeon();
+  const activeMode: DataMode = mode === 'demo' ? 'demo' : neon && auth.user ? 'nuvem' : 'local';
 
   const repository = useMemo<ProgressRepository>(() => {
-    if (activeMode === 'supabase') return new SupabaseRepository(supabase!, auth.user!.id);
+    if (activeMode === 'nuvem') return new NeonRepository(neon!, auth.user!.id);
     if (activeMode === 'demo') return new LocalStorageRepository('demo', DEMO_KEY);
     return new LocalStorageRepository('local', LOCAL_KEY);
-  }, [activeMode, supabase, auth.user]);
+  }, [activeMode, neon, auth.user]);
 
   // Carrega o estado sempre que o repositório muda (troca de modo, login, logout).
   useEffect(() => {
@@ -91,8 +92,10 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
         if (cancelled) return;
         let initial = loaded ?? (repository.mode === 'demo' ? buildDemoState() : createInitialState());
         let adopted = false;
+        // Conta nova: o perfil ainda não existe no banco, então usa o nome informado no cadastro.
+        if (repository.mode === 'nuvem' && !loaded) initial = { ...initial, profile: { ...initial.profile, name: auth.user?.name ?? '' } };
         // Primeiro login: a conta ainda está vazia, então leva junto o progresso feito neste navegador.
-        if (repository.mode === 'supabase' && !hasActivity(initial)) {
+        if (repository.mode === 'nuvem' && !hasActivity(initial)) {
           const local = await new LocalStorageRepository('local', LOCAL_KEY).load().catch(() => null);
           if (cancelled) return;
           if (local && hasActivity(local)) {
@@ -103,8 +106,8 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
         }
         loadedState.current = loaded && !adopted ? initial : null; // estado novo precisa ser salvo
         dispatch({ type: 'STATE_REPLACED', state: initial });
-        if (repository instanceof SupabaseRepository && repository.loadedFromCache) {
-          setError('Sem conexão com o Supabase: usando a cópia salva neste navegador. As alterações serão enviadas quando a conexão voltar.');
+        if (repository instanceof NeonRepository && repository.loadedFromCache) {
+          setError('Sem conexão com a nuvem: usando a cópia salva neste navegador. As alterações serão enviadas quando a conexão voltar.');
           setStatus('erro');
         } else {
           setStatus('salvo');

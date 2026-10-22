@@ -182,12 +182,12 @@ function AccountBox() {
 
 function SyncIndicator({ status, mode, error }: { status: string; mode: string; error: string | null }) {
   const label =
-    mode === 'supabase'
+    mode === 'nuvem'
       ? status === 'erro'
         ? 'Sincronização pendente'
         : status === 'salvando'
           ? 'Sincronizando…'
-          : 'Sincronizado com Supabase'
+          : 'Sincronizado com a sua conta'
       : mode === 'demo'
         ? 'Dados de demonstração (neste navegador)'
         : status === 'erro'

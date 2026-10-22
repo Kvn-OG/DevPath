@@ -1,48 +1,30 @@
--- DevPath — progresso do estudante (integração OPCIONAL com Supabase)
--- Execute no SQL Editor do seu projeto Supabase.
+-- DevPath — progresso do estudante (integração OPCIONAL com Neon)
+-- Execute no SQL Editor do seu projeto Neon, com a Data API e o Neon Auth ativos.
 --
 -- Princípios:
---   * Cada linha pertence a um usuário (user_id = auth.uid()).
+--   * Cada linha pertence a um usuário (user_id = auth.user_id(), o "sub" do JWT do Neon Auth).
 --   * RLS habilitado em TODAS as tabelas; nenhuma política dá acesso a dados de outros usuários.
+--   * O papel "authenticated" (usuário logado na Data API) recebe permissão só nestas tabelas.
 --   * IDs de conteúdo (aulas, exercícios...) são textos estáveis definidos no repositório
 --     (src/content). Veja 002_content_catalog.sql para o catálogo opcional no banco.
+--   * O perfil é criado pelo próprio app no primeiro salvamento (não há gatilho de cadastro).
 
 -- ---------------------------------------------------------------------------
 -- Perfis
 
 create table if not exists public.profiles (
-  id uuid primary key references auth.users (id) on delete cascade,
+  id text primary key default (auth.user_id()),
   display_name text not null default '' check (char_length(display_name) <= 80),
   weekly_goal_exercises smallint not null default 10 check (weekly_goal_exercises between 1 and 100),
   weekly_goal_lessons smallint not null default 3 check (weekly_goal_lessons between 1 and 50),
   created_at timestamptz not null default now()
 );
 
--- Cria o perfil automaticamente no cadastro.
-create or replace function public.handle_new_user()
-returns trigger
-language plpgsql
-security definer
-set search_path = ''
-as $$
-begin
-  insert into public.profiles (id, display_name)
-  values (new.id, coalesce(new.raw_user_meta_data ->> 'display_name', ''))
-  on conflict (id) do nothing;
-  return new;
-end;
-$$;
-
-drop trigger if exists on_auth_user_created on auth.users;
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute function public.handle_new_user();
-
 -- ---------------------------------------------------------------------------
 -- Progresso
 
 create table if not exists public.lesson_progress (
-  user_id uuid not null references auth.users (id) on delete cascade,
+  user_id text not null default (auth.user_id()),
   lesson_id text not null,
   started_at timestamptz not null,
   last_visited_at timestamptz not null,
@@ -52,7 +34,7 @@ create table if not exists public.lesson_progress (
 );
 
 create table if not exists public.exercise_progress (
-  user_id uuid not null references auth.users (id) on delete cascade,
+  user_id text not null default (auth.user_id()),
   exercise_id text not null,
   attempts integer not null default 0 check (attempts >= 0),
   failed_attempts integer not null default 0 check (failed_attempts >= 0 and failed_attempts <= attempts),
@@ -69,7 +51,7 @@ create table if not exists public.exercise_progress (
 -- Histórico imutável de tentativas (base das estatísticas e recomendações).
 create table if not exists public.exercise_attempts (
   id uuid primary key,
-  user_id uuid not null references auth.users (id) on delete cascade,
+  user_id text not null default (auth.user_id()),
   exercise_id text not null,
   created_at timestamptz not null,
   correct boolean not null,
@@ -81,7 +63,7 @@ create index if not exists exercise_attempts_user_exercise_idx on public.exercis
 create index if not exists exercise_attempts_user_created_idx on public.exercise_attempts (user_id, created_at desc);
 
 create table if not exists public.challenge_progress (
-  user_id uuid not null references auth.users (id) on delete cascade,
+  user_id text not null default (auth.user_id()),
   challenge_id text not null,
   started_at timestamptz not null,
   completed_at timestamptz,
@@ -89,7 +71,7 @@ create table if not exists public.challenge_progress (
 );
 
 create table if not exists public.project_progress (
-  user_id uuid not null references auth.users (id) on delete cascade,
+  user_id text not null default (auth.user_id()),
   project_id text not null,
   started_at timestamptz not null,
   completed_step_ids text[] not null default '{}',
@@ -100,7 +82,7 @@ create table if not exists public.project_progress (
 
 create table if not exists public.assessment_results (
   id uuid primary key,
-  user_id uuid not null references auth.users (id) on delete cascade,
+  user_id text not null default (auth.user_id()),
   assessment_id text not null,
   created_at timestamptz not null,
   correct integer not null check (correct >= 0),
@@ -113,7 +95,7 @@ create index if not exists assessment_results_user_assessment_idx on public.asse
 
 -- Revisão espaçada (caixas de Leitner).
 create table if not exists public.review_items (
-  user_id uuid not null references auth.users (id) on delete cascade,
+  user_id text not null default (auth.user_id()),
   concept_id text not null,
   box smallint not null default 0 check (box between 0 and 5),
   due_at timestamptz not null,
@@ -124,11 +106,23 @@ create table if not exists public.review_items (
 create index if not exists review_items_user_due_idx on public.review_items (user_id, due_at);
 
 create table if not exists public.study_days (
-  user_id uuid not null references auth.users (id) on delete cascade,
+  user_id text not null default (auth.user_id()),
   day date not null,
   activities integer not null default 0 check (activities >= 0),
   primary key (user_id, day)
 );
+
+-- ---------------------------------------------------------------------------
+-- Permissões da Data API: só usuários logados, só estas tabelas.
+
+grant usage on schema public to authenticated;
+grant select, insert, update on public.profiles to authenticated;
+grant select, insert, update, delete on
+  public.lesson_progress, public.exercise_progress, public.challenge_progress,
+  public.project_progress, public.review_items, public.study_days
+  to authenticated;
+-- Tentativas e resultados de avaliação são históricos: sem UPDATE, para não reescrever o passado.
+grant select, insert, delete on public.exercise_attempts, public.assessment_results to authenticated;
 
 -- ---------------------------------------------------------------------------
 -- Row Level Security: cada usuário acessa apenas as próprias linhas.
@@ -137,15 +131,15 @@ alter table public.profiles enable row level security;
 
 drop policy if exists "perfil: ler o próprio" on public.profiles;
 create policy "perfil: ler o próprio" on public.profiles
-  for select to authenticated using ((select auth.uid()) = id);
+  for select to authenticated using ((select auth.user_id()) = id);
 
 drop policy if exists "perfil: criar o próprio" on public.profiles;
 create policy "perfil: criar o próprio" on public.profiles
-  for insert to authenticated with check ((select auth.uid()) = id);
+  for insert to authenticated with check ((select auth.user_id()) = id);
 
 drop policy if exists "perfil: atualizar o próprio" on public.profiles;
 create policy "perfil: atualizar o próprio" on public.profiles
-  for update to authenticated using ((select auth.uid()) = id) with check ((select auth.uid()) = id);
+  for update to authenticated using ((select auth.user_id()) = id) with check ((select auth.user_id()) = id);
 
 do $$
 declare
@@ -159,20 +153,19 @@ begin
     execute format('alter table public.%I enable row level security', t);
 
     execute format('drop policy if exists "dono: ler" on public.%I', t);
-    execute format('create policy "dono: ler" on public.%I for select to authenticated using ((select auth.uid()) = user_id)', t);
+    execute format('create policy "dono: ler" on public.%I for select to authenticated using ((select auth.user_id()) = user_id)', t);
 
     execute format('drop policy if exists "dono: inserir" on public.%I', t);
-    execute format('create policy "dono: inserir" on public.%I for insert to authenticated with check ((select auth.uid()) = user_id)', t);
+    execute format('create policy "dono: inserir" on public.%I for insert to authenticated with check ((select auth.user_id()) = user_id)', t);
 
     execute format('drop policy if exists "dono: atualizar" on public.%I', t);
-    execute format('create policy "dono: atualizar" on public.%I for update to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id)', t);
+    execute format('create policy "dono: atualizar" on public.%I for update to authenticated using ((select auth.user_id()) = user_id) with check ((select auth.user_id()) = user_id)', t);
 
     execute format('drop policy if exists "dono: apagar" on public.%I', t);
-    execute format('create policy "dono: apagar" on public.%I for delete to authenticated using ((select auth.uid()) = user_id)', t);
+    execute format('create policy "dono: apagar" on public.%I for delete to authenticated using ((select auth.user_id()) = user_id)', t);
   end loop;
 end
 $$;
 
--- Tentativas e resultados de avaliação são históricos: impede reescrever o passado.
 drop policy if exists "dono: atualizar" on public.exercise_attempts;
 drop policy if exists "dono: atualizar" on public.assessment_results;

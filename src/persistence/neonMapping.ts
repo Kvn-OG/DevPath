@@ -1,5 +1,5 @@
-// Conversão entre o estado da aplicação e as linhas das tabelas do Supabase
-// (supabase/migrations/001_progress.sql). Funções puras, cobertas por testes.
+// Conversão entre o estado da aplicação e as linhas das tabelas do Neon
+// (neon/migrations/001_progress.sql). Funções puras, cobertas por testes.
 
 import type { AttemptSource, ProgressState } from '../types/progress';
 

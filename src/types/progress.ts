@@ -95,4 +95,4 @@ export interface ProgressState {
   studyDays: Record<string, StudyDay>;
 }
 
-export type DataMode = 'local' | 'demo' | 'supabase';
+export type DataMode = 'local' | 'demo' | 'nuvem';

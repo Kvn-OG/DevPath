@@ -116,13 +116,13 @@ create table if not exists public.achievements (
 
 -- Conquistas desbloqueadas (hoje são derivadas no cliente a partir do progresso).
 create table if not exists public.user_achievements (
-  user_id uuid not null references auth.users (id) on delete cascade,
+  user_id text not null default (auth.user_id()),
   achievement_id text not null references public.achievements (id) on delete cascade,
   unlocked_at timestamptz not null default now(),
   primary key (user_id, achievement_id)
 );
 
--- Catálogo: leitura para usuários autenticados; escrita apenas via service_role (painel admin/CI).
+-- Catálogo: leitura para usuários autenticados; escrita apenas pelo dono do banco (painel admin/CI), sem GRANT para usuários.
 do $$
 declare
   t text;
@@ -144,6 +144,15 @@ alter table public.grading_criteria enable row level security;
 
 alter table public.user_achievements enable row level security;
 drop policy if exists "dono: ler" on public.user_achievements;
-create policy "dono: ler" on public.user_achievements for select to authenticated using ((select auth.uid()) = user_id);
+create policy "dono: ler" on public.user_achievements for select to authenticated using ((select auth.user_id()) = user_id);
 drop policy if exists "dono: inserir" on public.user_achievements;
-create policy "dono: inserir" on public.user_achievements for insert to authenticated with check ((select auth.uid()) = user_id);
+create policy "dono: inserir" on public.user_achievements for insert to authenticated with check ((select auth.user_id()) = user_id);
+
+-- Permissões da Data API (o RLS acima continua decidindo quais linhas aparecem).
+grant usage on schema public to authenticated;
+grant select on
+  public.tracks, public.modules, public.lessons, public.lesson_prerequisites, public.concepts, public.exercises,
+  public.exercise_concepts, public.exercise_options, public.challenges, public.projects, public.project_steps,
+  public.achievements
+  to authenticated;
+grant select, insert on public.user_achievements to authenticated;

@@ -156,6 +156,8 @@ function AccountSection() {
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [newPassword, setNewPassword] = useState('');
+  const [passwordReset, setPasswordReset] = useState(false);
+  const resetToken = params.get('redefinir') ? params.get('token') : null;
 
   if (!auth.available) return null;
 
@@ -164,6 +166,7 @@ function AccountSection() {
     const error = await fn();
     setBusy(false);
     setMessage(error ? { ok: false, text: error } : { ok: true, text: success });
+    return error;
   };
 
   const importLocal = () => {
@@ -185,30 +188,35 @@ function AccountSection() {
     <section aria-labelledby="conta">
       <SectionTitle id="conta">Conta</SectionTitle>
       <Card className="space-y-4">
+        {/* O link do e-mail de recuperação volta para cá com ?redefinir=1&token=... (ou &error=INVALID_TOKEN). */}
+        {resetToken && !passwordReset && (
+          <form
+            className="flex flex-wrap items-end gap-2"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const error = await run(() => auth.resetPassword(resetToken, newPassword), 'Senha atualizada. Entre com a nova senha.');
+              if (!error) setPasswordReset(true);
+            }}
+          >
+            <label className="text-sm">
+              <span className="mb-1 block text-muted">Nova senha (mínimo 8 caracteres)</span>
+              <input className={input} type="password" minLength={8} required value={newPassword} onChange={(e) => setNewPassword(e.target.value)} autoComplete="new-password" />
+            </label>
+            <Button type="submit" disabled={busy}>
+              Atualizar senha
+            </Button>
+          </form>
+        )}
+        {params.get('redefinir') && params.get('error') && (
+          <p className="text-sm text-danger">O link de redefinição expirou ou já foi usado. Peça um novo em "Esqueci a senha".</p>
+        )}
         {auth.user ? (
           <>
             <p className="text-sm">
               Conectado como <strong>{auth.user.email}</strong>.
             </p>
-            {params.get('redefinir') && (
-              <form
-                className="flex flex-wrap items-end gap-2"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  run(() => auth.updatePassword(newPassword), 'Senha atualizada.');
-                }}
-              >
-                <label className="text-sm">
-                  <span className="mb-1 block text-muted">Nova senha</span>
-                  <input className={input} type="password" minLength={6} required value={newPassword} onChange={(e) => setNewPassword(e.target.value)} autoComplete="new-password" />
-                </label>
-                <Button type="submit" disabled={busy}>
-                  Atualizar senha
-                </Button>
-              </form>
-            )}
             <div className="flex flex-wrap gap-2">
-              {activeMode === 'supabase' && (
+              {activeMode === 'nuvem' && (
                 <Button variant="secondary" onClick={importLocal}>
                   Importar progresso deste navegador
                 </Button>

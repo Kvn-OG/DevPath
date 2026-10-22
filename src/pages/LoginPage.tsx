@@ -21,7 +21,7 @@ export default function LoginPage() {
         </Card>
       ) : (
         <Card>
-          <p className="text-sm text-muted">O login não está disponível nesta instalação: o Supabase não foi configurado (veja o README). Seu progresso continua salvo neste navegador.</p>
+          <p className="text-sm text-muted">O login não está disponível nesta instalação: o Neon não foi configurado (veja o README). Seu progresso continua salvo neste navegador.</p>
         </Card>
       )}
     </div>

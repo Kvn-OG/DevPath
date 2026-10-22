@@ -1,5 +1,5 @@
 // Todas as mudanças de progresso passam por este reducer puro.
-// A persistência (local ou Supabase) apenas salva o estado resultante.
+// A persistência (local ou Neon) apenas salva o estado resultante.
 
 import { challenges, getAssessment, getExercise, getLesson, lessonOfExercise, projects } from '../content';
 import type { Attempt, AssessmentResult, ExerciseProgress, Profile, ProgressState } from '../types/progress';

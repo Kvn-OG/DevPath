@@ -7,7 +7,7 @@ export const inputClass = 'h-10 w-full rounded-lg border border-line bg-bg px-3 
 
 type Tab = 'entrar' | 'cadastrar' | 'recuperar';
 
-/** Formulário de entrar, criar conta e recuperar senha (Supabase Auth). */
+/** Formulário de entrar, criar conta e recuperar senha (Neon Auth). */
 export function AuthForm({ initialTab = 'entrar' }: { initialTab?: Tab }) {
   const auth = useAuth();
   const [email, setEmail] = useState('');
@@ -54,7 +54,7 @@ export function AuthForm({ initialTab = 'entrar' }: { initialTab?: Tab }) {
         onSubmit={(e) => {
           e.preventDefault();
           if (tab === 'entrar') run(() => auth.signIn(email, password), 'Login realizado.');
-          else if (tab === 'cadastrar') run(() => auth.signUp(email, password, displayName), 'Conta criada. Se a confirmação por e-mail estiver ativa, confirme pelo link enviado.');
+          else if (tab === 'cadastrar') run(() => auth.signUp(email, password, displayName), 'Conta criada. Enviamos um link de confirmação para o seu e-mail: confirme antes de entrar.');
           else run(() => auth.requestPasswordReset(email), 'Se o e-mail existir, você receberá um link para redefinir a senha.');
         }}
       >
@@ -70,12 +70,12 @@ export function AuthForm({ initialTab = 'entrar' }: { initialTab?: Tab }) {
         </label>
         {tab !== 'recuperar' && (
           <label className="text-sm">
-            <span className="mb-1 block text-muted">Senha (mínimo 6 caracteres)</span>
+            <span className="mb-1 block text-muted">Senha (mínimo 8 caracteres)</span>
             <input
               className={inputClass}
               type="password"
               required
-              minLength={6}
+              minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete={tab === 'entrar' ? 'current-password' : 'new-password'}
