@@ -1,4 +1,6 @@
 import { AlertTriangle, CheckCircle2, EyeOff, XCircle } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { celebrate, shake } from '../../identity/celebrate';
 import type { RunResult } from '../../sandbox/evaluator';
 import { cn } from '../../utils/cn';
 
@@ -12,11 +14,20 @@ export function RunResultView({ result, mode, language = 'javascript' }: RunResu
   const sql = language === 'sql';
   const visibleTests = result.tests;
   const passedCount = result.tests.filter((t) => t.passed).length;
+  const verdict = useRef<HTMLDivElement>(null);
+  const verifying = mode === 'verificar' && result.tests.length > 0;
+
+  useEffect(() => {
+    if (!verifying || !verdict.current) return;
+    if (result.passed) celebrate(verdict.current, 44);
+    else shake(verdict.current);
+  }, [result, verifying]);
 
   return (
     <div className="space-y-3" aria-live="polite">
-      {mode === 'verificar' && result.tests.length > 0 && (
+      {verifying && (
         <div
+          ref={verdict}
           className={cn(
             'flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium',
             result.passed ? 'bg-success-soft text-success' : 'bg-danger-soft text-danger',

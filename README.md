@@ -58,9 +58,20 @@ Múltipla escolha · verdadeiro/falso com justificativa · preencher lacunas · 
 
 Exportar/importar progresso em JSON fica em Configurações.
 
+## Identidade visual — "o caminho que acende"
+
+O progresso é um caminho de luz: cada aula é um nó, e o que você conclui acende. Essa ideia aparece no logo, nas barras de progresso, no anel de nível e no hero 3D.
+
+- **Cores**: Breu (fundo quase preto), **Faísca** `#c8ff3e` (a luz do progresso), **Ultravioleta** `#8b6cff` e **Plasma** `#4de1ff`. Cada trilha tem uma cor própria (`src/identity/trackTheme.ts`), usada só como luz, nunca como cor de texto. No tema claro, o botão principal é tinta com a Faísca como texto, e o hero continua escuro (`.dp-stage`).
+- **Tipografia**: Bricolage Grotesque (títulos), Geist (texto) e JetBrains Mono (código e rótulos), servidas localmente via Fontsource.
+- **Hero 3D (Three.js)**: no dashboard, todas as aulas das trilhas prontas viram um tubo sinuoso com shaders próprios. Trechos concluídos acendem na cor da trilha, com um pulso de luz correndo por eles; a aula atual pulsa; placas com o nome das trilhas flutuam pela estrada. Na abertura, a câmera viaja do início até a aula atual. Os nós são clicáveis. A cena só carrega sob demanda, pausa fora da tela e não é desenhada sem WebGL.
+- **Movimento (GSAP)**: abertura animada uma vez por sessão, entrada de páginas em cascata com títulos revelados palavra por palavra (SplitText), indicador que desliza na navegação, logo que se desenha (DrawSVG), contadores, barras que "correm" ao aparecer (ScrollTrigger), botão magnético, faíscas ao acertar e uma tremidinha ao errar.
+- **Atmosfera**: auroras que derivam, grade, granulado e um holofote que segue o ponteiro nos cartões (`.dp-spot`).
+- **Acessibilidade**: tudo respeita `prefers-reduced-motion` (cena estática, sem animações), elementos decorativos são `aria-hidden` e nos testes nenhum efeito roda (`motionOK()` em `src/identity/motion.ts`).
+
 ## Arquitetura
 
-SPA em **React 19 + Vite + TypeScript + Tailwind CSS 4**, com React Router, CodeMirror 6 (editor) e Lucide (ícones).
+SPA em **React 19 + Vite + TypeScript + Tailwind CSS 4**, com React Router, CodeMirror 6 (editor), Lucide (ícones), **GSAP** (movimento) e **Three.js** (hero 3D).
 
 ```
 src/
@@ -70,6 +81,7 @@ src/
   sandbox/       Execução isolada de código (avaliador, Web Worker, formatação, tradução de erros)
   persistence/   Repositórios (localStorage, demonstração, Neon) e mapeamento para tabelas
   state/         Providers React (autenticação opcional e progresso com salvamento automático)
+  identity/      Identidade visual: movimento (GSAP), atmosfera, abertura, comemorações e o caminho 3D (Three.js)
   components/    UI: layout, primitivos, código, exercícios, aula
   pages/         Uma página por rota
 neon/migrations/      SQL das tabelas, constraints, índices e políticas RLS

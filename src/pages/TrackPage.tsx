@@ -111,7 +111,7 @@ export default function TrackPage() {
             const project = getProject(id);
             if (!project) return null;
             return (
-              <Link key={id} to={`/projetos/${id}`} className="rounded-xl border border-line bg-surface p-5 hover:border-line-strong">
+              <Link key={id} to={`/projetos/${id}`} className="dp-spot rounded-2xl border border-line bg-surface p-5 hover:border-line-strong">
                 <div className="text-xs font-semibold text-faint">PROJETO {project.letter}</div>
                 <div className="mt-1 font-semibold">{project.title}</div>
                 <div className="mt-1 text-sm text-muted">{project.status === 'completo' ? `${project.steps.length} etapas guiadas` : 'Planejado'}</div>
@@ -119,7 +119,7 @@ export default function TrackPage() {
             );
           })}
           {track.finalAssessmentId && ready && (
-            <Link to={`/avaliacoes/${track.finalAssessmentId}`} className="rounded-xl border border-line bg-surface p-5 hover:border-line-strong">
+            <Link to={`/avaliacoes/${track.finalAssessmentId}`} className="dp-spot rounded-2xl border border-line bg-surface p-5 hover:border-line-strong">
               <div className="text-xs font-semibold text-faint">AVALIAÇÃO FINAL</div>
               <div className="mt-1 font-semibold">{getAssessment(track.finalAssessmentId)?.title}</div>
               <div className="mt-1 text-sm text-muted">

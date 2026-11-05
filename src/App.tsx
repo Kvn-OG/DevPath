@@ -3,6 +3,8 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AppShell } from './components/layout/AppShell';
 import { ScrollToTop } from './components/layout/ScrollToTop';
 import { DashboardPage } from './pages/DashboardPage';
+import { Intro } from './identity/Intro';
+import { PageEnter } from './identity/PageEnter';
 import { AuthProvider } from './state/AuthProvider';
 import { ProgressProvider } from './state/ProgressProvider';
 
@@ -26,13 +28,28 @@ const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
-const page = (node: ReactNode) => <Suspense fallback={<p className="text-muted">Carregando…</p>}>{node}</Suspense>;
+function PageLoading() {
+  return (
+    <div className="flex items-center gap-3 py-10 text-sm text-muted" role="status">
+      <span className="relative h-px w-24 overflow-hidden bg-line">
+        <span className="dp-loader absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-spark to-transparent" />
+      </span>
+      Carregando…
+    </div>
+  );
+}
+
+const page = (node: ReactNode) => (
+  <Suspense fallback={<PageLoading />}>
+    <PageEnter>{node}</PageEnter>
+  </Suspense>
+);
 
 export function AppRoutes() {
   return (
     <Routes>
       <Route element={<AppShell />}>
-        <Route index element={<DashboardPage />} />
+        <Route index element={<PageEnter><DashboardPage /></PageEnter>} />
         <Route path="trilhas" element={page(<TracksPage />)} />
         <Route path="trilhas/:trackId" element={page(<TrackPage />)} />
         <Route path="trilhas/:trackId/modulos/:moduleId" element={page(<ModulePage />)} />
@@ -60,6 +77,7 @@ export function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
+      <Intro />
       <AuthProvider>
         <ProgressProvider>
           <AppRoutes />

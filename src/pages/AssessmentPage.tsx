@@ -94,7 +94,7 @@ function AssessmentRun({ assessment, onRestart }: { assessment: Assessment; onRe
               );
             })}
           </ol>
-          <div className="sticky bottom-4 flex items-center justify-between gap-4 rounded-xl border border-line bg-surface/95 px-5 py-3 backdrop-blur">
+          <div className="sticky bottom-4 flex items-center justify-between gap-4 dp-spot rounded-2xl border border-line bg-surface/95 px-5 py-3 backdrop-blur">
             <span className="text-sm text-muted tabular-nums">
               {answered} de {total} respondidas
             </span>
@@ -166,7 +166,7 @@ function Results({
           const ok = answers[id];
           return (
             <li key={id}>
-              <details className="rounded-xl border border-line bg-surface px-5 py-4">
+              <details className="dp-spot rounded-2xl border border-line bg-surface px-5 py-4">
                 <summary className="flex cursor-pointer items-center gap-2 text-sm font-medium">
                   {ok ? <CheckCircle2 size={16} className="text-success" aria-label="Acertou" /> : <XCircle size={16} className="text-danger" aria-label="Errou" />}
                   Questão {i + 1}: {exercise.title}

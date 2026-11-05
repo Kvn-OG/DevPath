@@ -51,7 +51,7 @@ export default function ProjectsPage() {
           return (
             <li key={project.id}>
               {ready ? (
-                <Link to={`/projetos/${project.id}`} className="block h-full rounded-xl border border-line bg-surface p-5 hover:border-line-strong">
+                <Link to={`/projetos/${project.id}`} className="block h-full dp-spot rounded-2xl border border-line bg-surface p-5 hover:border-line-strong">
                   {body}
                 </Link>
               ) : (

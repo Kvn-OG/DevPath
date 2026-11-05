@@ -1,11 +1,12 @@
 import { CheckCircle2, RotateCcw, XCircle } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { gradeAnswer, isAnswerComplete, shuffledStepIds, type Answer, type GradeResult } from '../../domain/grading';
 import type { RunResult } from '../../sandbox/evaluator';
 import { useProgress } from '../../state/ProgressProvider';
 import type { Exercise } from '../../types/content';
 import type { AttemptSource } from '../../types/progress';
 import { cn } from '../../utils/cn';
+import { celebrate, shake } from '../../identity/celebrate';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/primitives';
 import { renderInline } from '../ui/RichText';
@@ -206,8 +207,16 @@ export function ExerciseRunner({ exercise, source, assessment = false, starterCo
 }
 
 function FeedbackBox({ correct, message, details }: { correct: boolean; message?: string; details?: string[] }) {
+  const box = useRef<HTMLDivElement>(null);
+  // Cada resposta verificada monta uma nova caixa: acerto solta faíscas, erro dá uma tremidinha.
+  useEffect(() => {
+    if (!box.current) return;
+    if (correct) celebrate(box.current);
+    else shake(box.current);
+  }, [correct, message]);
   return (
     <div
+      ref={box}
       role="status"
       className={cn(
         'animate-fade-in rounded-lg border px-4 py-3 text-sm',

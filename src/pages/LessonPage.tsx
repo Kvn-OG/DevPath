@@ -60,7 +60,7 @@ function LessonView({ lesson }: { lesson: Lesson }) {
   return (
     <div className="grid gap-10 lg:grid-cols-[220px_minmax(0,1fr)]">
       <aside aria-label="Índice de aulas" className="lg:sticky lg:top-10 lg:max-h-[calc(100dvh-5rem)] lg:self-start lg:overflow-y-auto">
-        <details className="group rounded-xl border border-line bg-surface p-3 lg:border-0 lg:bg-transparent lg:p-0" open>
+        <details className="group dp-spot rounded-2xl border border-line bg-surface p-3 lg:border-0 lg:bg-transparent lg:p-0" open>
           <summary className="cursor-pointer text-sm font-medium lg:hidden">Índice das aulas</summary>
           <div className="mt-3 space-y-5 lg:mt-0">
             {track.modules.map((m, i) => (

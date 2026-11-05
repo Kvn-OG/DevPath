@@ -15,7 +15,7 @@ import {
   Swords,
   X,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { computeXp, levelInfo } from '../../domain/gamification';
 import { dueReviews } from '../../domain/review';
@@ -23,6 +23,9 @@ import { failedAttemptsByConcept } from '../../domain/recommendations';
 import { useAuth } from '../../state/AuthProvider';
 import { useProgress } from '../../state/ProgressProvider';
 import { cn } from '../../utils/cn';
+import { Atmosphere } from '../../identity/Atmosphere';
+import { LevelRing } from '../../identity/LevelRing';
+import { gsap, motionOK, useGSAP } from '../../identity/motion';
 import { Logo } from './Logo';
 
 const NAV = [
@@ -47,58 +50,31 @@ export function AppShell() {
   const level = levelInfo(computeXp(state));
   const dueCount = dueReviews(state, new Date(), failedAttemptsByConcept(state)).length;
 
-  const nav = (
-    <nav aria-label="Navegação principal" className="flex flex-col gap-0.5">
-      {NAV.map(({ to, label, icon: Icon, end, badge }) => (
-        <NavLink
-          key={to}
-          to={to}
-          end={end}
-          className={({ isActive }) =>
-            cn(
-              'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
-              isActive ? 'bg-accent-soft font-medium text-fg' : 'text-muted hover:bg-surface-2 hover:text-fg',
-            )
-          }
-        >
-          {({ isActive }) => (
-            <>
-              <Icon size={17} aria-hidden className={isActive ? 'text-accent-strong' : undefined} />
-              <span className="flex-1">{label}</span>
-              {badge === 'reviews' && dueCount > 0 && (
-                <span className="rounded-full bg-accent px-1.5 text-[11px] font-semibold text-accent-fg tabular-nums" aria-label={`${dueCount} revisões pendentes`}>
-                  {dueCount}
-                </span>
-              )}
-            </>
-          )}
-        </NavLink>
-      ))}
-    </nav>
-  );
+  const nav = <MainNav dueCount={dueCount} pathname={location.pathname} />;
 
   const levelCard = (
-    <Link to="/progresso" className="block rounded-lg border border-line bg-surface-2/60 p-3 text-sm hover:border-line-strong">
-      <div className="flex items-center justify-between">
-        <span className="font-medium">Nível {level.level}</span>
-        <span className="text-xs text-muted tabular-nums">{level.xp} XP</span>
-      </div>
-      <div className="text-xs text-muted">{level.name}</div>
-      <div className="mt-2 h-1 overflow-hidden rounded-full bg-bg" aria-hidden>
-        <div className="h-full rounded-full bg-accent-strong" style={{ width: `${Math.round(level.progress * 100)}%` }} />
+    <Link to="/progresso" className="dp-spot flex items-center gap-3 rounded-2xl border border-line bg-surface-2/50 p-3 text-sm hover:border-line-strong">
+      <LevelRing progress={level.progress} level={level.level} />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-baseline justify-between gap-2">
+          <span className="font-medium">Nível {level.level}</span>
+          <span className="font-mono text-[11px] text-muted tabular-nums">{level.xp} XP</span>
+        </div>
+        <div className="truncate text-xs text-muted">{level.name}</div>
       </div>
     </Link>
   );
 
   return (
     <div className="min-h-dvh">
+      <Atmosphere />
       <a href="#conteudo" className="sr-only z-50 rounded-md bg-accent px-3 py-2 text-accent-fg focus:not-sr-only focus:fixed focus:top-3 focus:left-3">
         Pular para o conteúdo
       </a>
 
-      <aside className="fixed inset-y-0 left-0 hidden w-60 flex-col gap-6 overflow-y-auto border-r border-line bg-surface px-3 py-5 lg:flex">
+      <aside className="dp-glass fixed inset-y-0 left-0 z-20 hidden w-64 flex-col gap-7 overflow-y-auto border-r border-line px-3 py-6 lg:flex">
         <Link to="/" className="px-3" aria-label="DevPath — início">
-          <Logo />
+          <Logo animate />
         </Link>
         {nav}
         <div className="mt-auto space-y-3">
@@ -108,7 +84,7 @@ export function AppShell() {
         </div>
       </aside>
 
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-line bg-surface/95 px-4 py-3 backdrop-blur lg:hidden">
+      <header className="dp-glass sticky top-0 z-30 flex items-center justify-between border-b border-line px-4 py-3 lg:hidden">
         <Link to="/" aria-label="DevPath — início">
           <Logo />
         </Link>
@@ -118,13 +94,13 @@ export function AppShell() {
           aria-expanded={open}
           aria-controls="menu-movel"
           aria-label={open ? 'Fechar menu' : 'Abrir menu'}
-          className="rounded-lg border border-line p-2 text-muted"
+          className="rounded-xl border border-line p-2 text-muted"
         >
           {open ? <X size={18} aria-hidden /> : <Menu size={18} aria-hidden />}
         </button>
       </header>
       {open && (
-        <div id="menu-movel" className="animate-fade-in space-y-4 border-b border-line bg-surface px-3 py-4 lg:hidden">
+        <div id="menu-movel" className="dp-glass animate-fade-in sticky top-[61px] z-30 space-y-4 border-b border-line px-3 py-4 lg:hidden">
           {nav}
           {levelCard}
           <AccountBox />
@@ -132,10 +108,10 @@ export function AppShell() {
         </div>
       )}
 
-      <main id="conteudo" className="px-4 py-8 sm:px-8 lg:ml-60 lg:px-12 lg:py-10">
+      <main id="conteudo" className="px-4 py-8 sm:px-8 lg:ml-64 lg:px-12 lg:py-12">
         <div className="mx-auto max-w-6xl">
           {activeMode === 'demo' && (
-            <div role="note" className="mb-6 rounded-lg border border-warning/30 bg-warning-soft px-4 py-2.5 text-sm text-fg">
+            <div role="note" className="mb-6 rounded-xl border border-warning/30 bg-warning-soft px-4 py-2.5 text-sm text-fg">
               <strong className="text-warning">Modo demonstração:</strong> todo o progresso exibido é fictício e serve apenas para conhecer a plataforma.{' '}
               <Link to="/configuracoes" className="underline underline-offset-2 hover:text-accent-strong">
                 Voltar ao meu progresso
@@ -143,11 +119,11 @@ export function AppShell() {
             </div>
           )}
           {notice && (
-            <div role="status" className="mb-6 rounded-lg border border-success/30 bg-success-soft px-4 py-2.5 text-sm text-fg">
+            <div role="status" className="mb-6 rounded-xl border border-success/30 bg-success-soft px-4 py-2.5 text-sm text-fg">
               {notice}
             </div>
           )}
-          {ready ? <Outlet /> : <p className="text-muted">Carregando seu progresso…</p>}
+          {ready ? <Outlet /> : <p className="py-10 text-muted">Carregando seu progresso…</p>}
         </div>
       </main>
     </div>
@@ -161,7 +137,7 @@ function AccountBox() {
     return (
       <Link
         to="/entrar"
-        className="flex items-center gap-2 rounded-lg border border-accent-strong/40 bg-accent-soft px-3 py-2 text-sm font-medium hover:border-accent-strong/70"
+        className="flex items-center gap-2 rounded-xl border border-accent-strong/40 bg-accent-soft px-3 py-2 text-sm font-medium hover:border-accent-strong/70"
       >
         <LogIn size={16} aria-hidden className="text-accent-strong" />
         Entrar para sincronizar
@@ -201,5 +177,65 @@ function SyncIndicator({ status, mode, error }: { status: string; mode: string; 
         {error && status === 'erro' && <span className="block text-warning">{error}</span>}
       </span>
     </div>
+  );
+}
+
+/**
+ * Navegação com um indicador luminoso que desliza até o item ativo.
+ */
+function MainNav({ dueCount, pathname }: { dueCount: number; pathname: string }) {
+  const root = useRef<HTMLElement>(null);
+  const indicator = useRef<HTMLSpanElement>(null);
+
+  useGSAP(
+    () => {
+      const nav = root.current;
+      const ind = indicator.current;
+      if (!nav || !ind) return;
+      const active = nav.querySelector<HTMLElement>('[aria-current="page"]');
+      if (!active) {
+        gsap.set(ind, { autoAlpha: 0 });
+        return;
+      }
+      const target = { y: active.offsetTop, height: active.offsetHeight, autoAlpha: 1 };
+      if (motionOK() && ind.dataset.placed) gsap.to(ind, { ...target, duration: 0.55, ease: 'expo.out' });
+      else gsap.set(ind, target);
+      ind.dataset.placed = '1';
+    },
+    { dependencies: [pathname], scope: root },
+  );
+
+  return (
+    <nav ref={root} aria-label="Navegação principal" className="relative flex flex-col gap-0.5">
+      <span
+        ref={indicator}
+        aria-hidden
+        className="pointer-events-none invisible absolute inset-x-0 top-0 rounded-xl border border-accent-strong/20 bg-accent-soft"
+      >
+        <span className="absolute top-1/2 -left-3 h-5 w-1 -translate-y-1/2 rounded-r-full bg-spark shadow-[0_0_12px_2px_var(--dp-spark)]" />
+      </span>
+      {NAV.map(({ to, label, icon: Icon, end, badge }) => (
+        <NavLink
+          key={to}
+          to={to}
+          end={end}
+          className={({ isActive }) =>
+            cn('relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors', isActive ? 'font-medium text-fg' : 'text-muted hover:bg-surface-2/70 hover:text-fg')
+          }
+        >
+          {({ isActive }) => (
+            <>
+              <Icon size={17} aria-hidden className={cn('transition-transform duration-300', isActive ? 'scale-110 text-accent-strong' : undefined)} />
+              <span className="flex-1">{label}</span>
+              {badge === 'reviews' && dueCount > 0 && (
+                <span className="rounded-full bg-accent px-1.5 text-[11px] font-semibold text-accent-fg tabular-nums" aria-label={`${dueCount} revisões pendentes`}>
+                  {dueCount}
+                </span>
+              )}
+            </>
+          )}
+        </NavLink>
+      ))}
+    </nav>
   );
 }

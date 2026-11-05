@@ -87,7 +87,7 @@ export default function ExercisesPage() {
       {filtered.length === 0 ? (
         <EmptyState title="Nenhum exercício com esses filtros">Ajuste os filtros acima.</EmptyState>
       ) : (
-        <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
+        <ul className="divide-y divide-line overflow-hidden dp-spot rounded-2xl border border-line bg-surface">
           {filtered.map((e) => {
             const p = state.exercises[e.id];
             const lesson = lessonOfExercise(e.id);
