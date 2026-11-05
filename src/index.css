@@ -23,90 +23,175 @@
   --color-warning-soft: var(--dp-warning-soft);
   --color-info: var(--dp-info);
   --color-info-soft: var(--dp-info-soft);
+  --color-spark: var(--dp-spark);
+  --color-uv: var(--dp-uv);
+  --color-plasma: var(--dp-plasma);
 
-  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-sans: 'Geist Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', 'Cascadia Code', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-:root {
+/*
+ * Identidade DevPath — "o caminho que acende".
+ * Breu (fundo quase preto, levemente azulado), Faísca (verde-limão elétrico:
+ * a luz do progresso), Ultravioleta e Plasma (luzes secundárias).
+ * .dp-stage é um palco sempre escuro (o hero 3D), mesmo no tema claro.
+ */
+:root,
+.dp-stage {
   color-scheme: dark;
-  --dp-bg: #111114;
-  --dp-surface: #18181d;
-  --dp-surface-2: #202027;
-  --dp-line: #2a2a33;
-  --dp-line-strong: #3a3a46;
-  --dp-fg: #ececf1;
-  --dp-muted: #a3a3b0;
-  --dp-faint: #75757f;
-  --dp-accent: #7c3aed;
-  --dp-accent-fg: #ffffff;
-  --dp-accent-strong: #b69cff;
-  --dp-accent-soft: rgb(139 92 246 / 0.14);
-  --dp-success: #4ade80;
-  --dp-success-soft: rgb(74 222 128 / 0.12);
-  --dp-danger: #f87171;
-  --dp-danger-soft: rgb(248 113 113 / 0.12);
-  --dp-warning: #fbbf24;
-  --dp-warning-soft: rgb(251 191 36 / 0.12);
-  --dp-info: #7dd3fc;
-  --dp-info-soft: rgb(125 211 252 / 0.1);
+  --dp-bg: #07070b;
+  --dp-surface: #0e0e15;
+  --dp-surface-2: #16161f;
+  --dp-line: #22222e;
+  --dp-line-strong: #343444;
+  --dp-fg: #f1f1f5;
+  --dp-muted: #a4a4b4;
+  --dp-faint: #75758a;
+  --dp-accent: #c8ff3e;
+  --dp-accent-fg: #0a0b05;
+  --dp-accent-strong: #d4ff6e;
+  --dp-accent-soft: rgb(200 255 62 / 0.1);
+  --dp-success: #5cf0a8;
+  --dp-success-soft: rgb(92 240 168 / 0.1);
+  --dp-danger: #ff7a7a;
+  --dp-danger-soft: rgb(255 122 122 / 0.11);
+  --dp-warning: #ffc94a;
+  --dp-warning-soft: rgb(255 201 74 / 0.11);
+  --dp-info: #7ee3ff;
+  --dp-info-soft: rgb(126 227 255 / 0.1);
+
+  --dp-spark: #c8ff3e;
+  --dp-uv: #8b6cff;
+  --dp-plasma: #4de1ff;
+  --dp-glow: rgb(200 255 62 / 0.35);
+  --dp-aurora-a: rgb(139 108 255 / 0.32);
+  --dp-aurora-b: rgb(200 255 62 / 0.12);
+  --dp-aurora-c: rgb(77 225 255 / 0.16);
+  --dp-grid: rgb(255 255 255 / 0.045);
+  --dp-noise-opacity: 0.07;
+  --dp-glass: rgb(14 14 21 / 0.72);
 
   /* Destaque de sintaxe (classes tok-* do @lezer/highlight) */
-  --tok-keyword: #c4a7ff;
-  --tok-string: #9be7a8;
+  --tok-keyword: #b9a3ff;
+  --tok-string: #c8ff3e;
   --tok-number: #ffb57a;
-  --tok-comment: #6f6f7d;
-  --tok-function: #7dd3fc;
-  --tok-property: #f0abfc;
-  --tok-punct: #a3a3b0;
+  --tok-comment: #6c6c80;
+  --tok-function: #7ee3ff;
+  --tok-property: #ff9be8;
+  --tok-punct: #a4a4b4;
 }
 
 :root[data-theme='light'] {
   color-scheme: light;
-  --dp-bg: #f6f6f8;
+  --dp-bg: #f3f2ec;
   --dp-surface: #ffffff;
-  --dp-surface-2: #f0eff4;
-  --dp-line: #e2e1e8;
-  --dp-line-strong: #cfcdd8;
-  --dp-fg: #18181d;
-  --dp-muted: #52525e;
-  --dp-faint: #75757f;
-  --dp-accent: #6d28d9;
-  --dp-accent-fg: #ffffff;
-  --dp-accent-strong: #6d28d9;
-  --dp-accent-soft: rgb(109 40 217 / 0.09);
-  --dp-success: #15803d;
-  --dp-success-soft: rgb(21 128 61 / 0.09);
+  --dp-surface-2: #eeede6;
+  --dp-line: #e0ded4;
+  --dp-line-strong: #c9c6b8;
+  --dp-fg: #0c0c12;
+  --dp-muted: #4f4f5c;
+  --dp-faint: #72727e;
+  /* No claro, o botão principal é tinta com a Faísca como texto. */
+  --dp-accent: #0c0c12;
+  --dp-accent-fg: #d4ff4a;
+  --dp-accent-strong: #5a36f0;
+  --dp-accent-soft: rgb(90 54 240 / 0.08);
+  --dp-success: #11804a;
+  --dp-success-soft: rgb(17 128 74 / 0.09);
   --dp-danger: #b91c1c;
   --dp-danger-soft: rgb(185 28 28 / 0.08);
-  --dp-warning: #a16207;
-  --dp-warning-soft: rgb(161 98 7 / 0.1);
-  --dp-info: #0369a1;
-  --dp-info-soft: rgb(3 105 161 / 0.08);
+  --dp-warning: #9a5b00;
+  --dp-warning-soft: rgb(154 91 0 / 0.1);
+  --dp-info: #03699c;
+  --dp-info-soft: rgb(3 105 156 / 0.08);
 
-  --tok-keyword: #6d28d9;
-  --tok-string: #15803d;
+  --dp-spark: #8fd400;
+  --dp-uv: #5a36f0;
+  --dp-plasma: #0aa5c8;
+  --dp-glow: rgb(90 54 240 / 0.22);
+  --dp-aurora-a: rgb(90 54 240 / 0.16);
+  --dp-aurora-b: rgb(170 230 0 / 0.2);
+  --dp-aurora-c: rgb(10 165 200 / 0.12);
+  --dp-grid: rgb(12 12 18 / 0.06);
+  --dp-noise-opacity: 0.05;
+  --dp-glass: rgb(255 255 255 / 0.72);
+
+  --tok-keyword: #5a36f0;
+  --tok-string: #2f7d00;
   --tok-number: #c2410c;
   --tok-comment: #8a8a96;
-  --tok-function: #0369a1;
+  --tok-function: #03699c;
   --tok-property: #a21caf;
-  --tok-punct: #52525e;
+  --tok-punct: #4f4f5c;
+}
+
+/* As utilidades do Tailwind resolvem --color-* no :root; o palco as redeclara. */
+.dp-stage {
+  --color-bg: var(--dp-bg);
+  --color-surface: var(--dp-surface);
+  --color-surface-2: var(--dp-surface-2);
+  --color-line: var(--dp-line);
+  --color-line-strong: var(--dp-line-strong);
+  --color-fg: var(--dp-fg);
+  --color-muted: var(--dp-muted);
+  --color-faint: var(--dp-faint);
+  --color-accent: var(--dp-accent);
+  --color-accent-fg: var(--dp-accent-fg);
+  --color-accent-strong: var(--dp-accent-strong);
+  --color-accent-soft: var(--dp-accent-soft);
+  --color-success: var(--dp-success);
+  --color-success-soft: var(--dp-success-soft);
+  --color-danger: var(--dp-danger);
+  --color-danger-soft: var(--dp-danger-soft);
+  --color-warning: var(--dp-warning);
+  --color-warning-soft: var(--dp-warning-soft);
+  --color-info: var(--dp-info);
+  --color-info-soft: var(--dp-info-soft);
+  --color-spark: var(--dp-spark);
+  --color-uv: var(--dp-uv);
+  --color-plasma: var(--dp-plasma);
+  color: var(--dp-fg);
+}
+
+/* O fundo fica só no html: assim a atmosfera (z-index -1) aparece por cima dele. */
+html {
+  background: var(--dp-bg);
 }
 
 html,
 body {
-  background: var(--dp-bg);
   color: var(--dp-fg);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'ss01', 'cv11';
 }
 
 body {
   min-height: 100dvh;
 }
 
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  font-weight: 650;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
 ::selection {
-  background: var(--dp-accent-soft);
+  background: var(--dp-spark);
+  color: #0a0b05;
 }
 
 :focus-visible {
@@ -115,13 +200,195 @@ body {
   border-radius: 6px;
 }
 
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--dp-line-strong) transparent;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ---------- Atmosfera: auroras, grade e granulado atrás de tudo ---------- */
+.dp-atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.dp-aurora {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  will-change: transform;
+}
+.dp-grid {
+  position: absolute;
+  inset: -1px;
+  background-image:
+    linear-gradient(var(--dp-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--dp-grid) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%);
+}
+.dp-noise {
+  position: absolute;
+  inset: 0;
+  opacity: var(--dp-noise-opacity);
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- Vidro (barra lateral, cabeçalho) ---------- */
+.dp-glass {
+  background: var(--dp-glass);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+}
+
+/* ---------- Holofote: um brilho que segue o ponteiro dentro dos cartões ---------- */
+.dp-spot {
+  position: relative;
+  isolation: isolate;
+}
+.dp-spot::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 300ms ease;
+  background:
+    radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), color-mix(in oklab, var(--dp-spot, var(--dp-spark)) 9%, transparent), transparent 45%);
+}
+.dp-spot::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: 1;
+  border-radius: inherit;
+  pointer-events: none;
+  padding: 1px;
+  opacity: 0;
+  transition: opacity 300ms ease;
+  background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), color-mix(in oklab, var(--dp-spot, var(--dp-spark)) 70%, transparent), transparent 60%);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+}
+@media (pointer: fine) {
+  .dp-spot:hover::before,
+  .dp-spot:hover::after {
+    opacity: 1;
+  }
+}
+
+/* ---------- Botão principal: brilho e reflexo que atravessa ---------- */
+.dp-btn-primary {
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--dp-accent) 60%, transparent),
+    0 8px 28px -10px var(--dp-glow);
+}
+.dp-btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-120%) skewX(-20deg);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.45), transparent);
+  transition: transform 700ms var(--ease-out-expo);
+}
+.dp-btn-primary:hover:not(:disabled)::after {
+  transform: translateX(120%) skewX(-20deg);
+}
+
+/* ---------- O traço: barra de progresso com faísca na ponta ---------- */
+.dp-trail {
+  position: relative;
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, var(--dp-uv), var(--dp-trail, var(--dp-spark)));
+  box-shadow: 0 0 12px -2px var(--dp-trail, var(--dp-spark));
+}
+.dp-trail[data-full='false']::after {
+  content: '';
+  position: absolute;
+  right: -3px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  transform: translateY(-50%);
+  background: #fff;
+  box-shadow:
+    0 0 6px 2px var(--dp-trail, var(--dp-spark)),
+    0 0 14px 4px color-mix(in oklab, var(--dp-trail, var(--dp-spark)) 50%, transparent);
+}
+
+/* ---------- Texto com contorno (numerais das trilhas, 404) ---------- */
+.dp-outline-text {
+  color: transparent;
+  -webkit-text-stroke: 1px color-mix(in oklab, var(--dp-fg) 28%, transparent);
+}
+
+/* ---------- Gradiente da marca em texto ---------- */
+.dp-gradient-text {
+  background: linear-gradient(100deg, var(--dp-fg) 20%, var(--dp-spark) 55%, var(--dp-plasma) 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+:root[data-theme='light'] .dp-gradient-text {
+  background-image: linear-gradient(100deg, var(--dp-fg) 25%, var(--dp-uv) 70%, var(--dp-plasma) 100%);
+}
+
+/* ---------- Partículas de comemoração ---------- */
+.dp-confetti {
+  position: fixed;
+  z-index: 60;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+/* ---------- Marquee (faixa de tecnologias) ---------- */
+@keyframes dp-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.dp-marquee {
+  animation: dp-marquee 40s linear infinite;
+}
+
+@keyframes dp-pulse-ring {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+.dp-pulse::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: inherit;
+  animation: dp-pulse-ring 1.8s var(--ease-out-expo) infinite;
 }
 
 /* Tokens de código */
@@ -164,7 +431,8 @@ body {
 @keyframes dp-fade-in {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(6px);
+    filter: blur(3px);
   }
   to {
     opacity: 1;
@@ -172,10 +440,51 @@ body {
   }
 }
 .animate-fade-in {
-  animation: dp-fade-in 180ms ease-out;
+  animation: dp-fade-in 320ms var(--ease-out-expo);
 }
 .tok-variableName2,
 .tok-className,
 .tok-typeName {
   color: var(--tok-function);
+}
+
+/* Carregamento entre páginas: um traço que percorre */
+@keyframes dp-loader {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}
+.dp-loader {
+  animation: dp-loader 1.1s var(--ease-out-expo) infinite;
+}
+
+/* Placas do caminho 3D */
+.dp-path-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  border: 1px solid rgb(255 255 255 / 0.12);
+  background: rgb(7 7 11 / 0.55);
+  backdrop-filter: blur(6px);
+  color: rgb(255 255 255 / 0.85);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  will-change: transform, opacity;
+  opacity: 0;
+}
+.dp-path-label span {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
 }

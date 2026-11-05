@@ -6,11 +6,11 @@ type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
 type Size = 'sm' | 'md';
 
 const base =
-  'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 select-none';
+  'inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-[color,background-color,border-color,box-shadow,transform] duration-200 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 select-none';
 
 const variants: Record<Variant, string> = {
-  primary: 'bg-accent text-accent-fg hover:brightness-110',
-  secondary: 'border border-line-strong bg-surface-2 text-fg hover:border-accent-strong/60',
+  primary: 'dp-btn-primary bg-accent text-accent-fg hover:brightness-110',
+  secondary: 'border border-line-strong bg-surface-2/80 text-fg backdrop-blur hover:border-accent-strong/60 hover:bg-surface-2',
   ghost: 'text-muted hover:bg-surface-2 hover:text-fg',
   danger: 'border border-danger/40 text-danger hover:bg-danger-soft',
 };

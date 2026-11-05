@@ -53,7 +53,7 @@ export default function ChallengesPage() {
                 return (
                   <li key={c.id}>
                     {c.status === 'completo' ? (
-                      <Link to={`/desafios/${c.id}`} className="block h-full rounded-xl border border-line bg-surface p-5 hover:border-line-strong">
+                      <Link to={`/desafios/${c.id}`} className="block h-full dp-spot rounded-2xl border border-line bg-surface p-5 hover:border-line-strong">
                         {content}
                       </Link>
                     ) : (

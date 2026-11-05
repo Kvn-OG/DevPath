@@ -37,7 +37,7 @@ export function Playground({ initialCode, language = 'javascript', setup = '' }:
   }
 
   return (
-    <div className="space-y-3 rounded-xl border border-line bg-surface p-4">
+    <div className="space-y-3 dp-spot rounded-2xl border border-line bg-surface p-4">
       <p className="text-sm text-muted">
         {language === 'sql'
           ? 'Mude a consulta, quebre de propósito e veja o que o PostgreSQL responde. A cada execução o banco volta aos dados do exemplo. Experimentos não contam como tentativas.'

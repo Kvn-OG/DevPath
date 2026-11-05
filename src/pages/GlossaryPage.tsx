@@ -31,7 +31,7 @@ export default function GlossaryPage() {
       ) : (
         <dl className="grid gap-3 md:grid-cols-2">
           {terms.map((t) => (
-            <div key={t.term} className="rounded-xl border border-line bg-surface p-4">
+            <div key={t.term} className="dp-spot rounded-2xl border border-line bg-surface p-4">
               <dt className="font-semibold">
                 {t.term} {t.english && <span className="text-sm font-normal text-faint">({t.english})</span>}
               </dt>

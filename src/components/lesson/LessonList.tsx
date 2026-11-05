@@ -24,7 +24,7 @@ export function LessonStatusIcon({ status, size = 16 }: { status: LessonStatus; 
 export function LessonList({ lessonIds, compact = false, currentId }: { lessonIds: string[]; compact?: boolean; currentId?: string }) {
   const { state } = useProgress();
   return (
-    <ol className={cn(compact ? 'space-y-0.5' : 'divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface')}>
+    <ol className={cn(compact ? 'space-y-0.5' : 'divide-y divide-line overflow-hidden dp-spot rounded-2xl border border-line bg-surface')}>
       {lessonIds.map((id) => {
         const lesson = getLesson(id);
         if (!lesson) return null;
